@@ -1,6 +1,7 @@
+
+// This file containes the implemenetation of the supported shell commands
 #include "command.h"
 #include "config.h"
-#include "commandhelp.h"
 #include "shell_inter.h"
 
 #include <stdio.h>
@@ -23,33 +24,40 @@
 const int MAX_FILES = 128;
 const int rows = 4, width = 84;
 
+// print the directory content : ls helper function
 int recDir(char *path) {
     DIR *dir = opendir(path);
     if (!dir) return ERR_STATUS;
-
+    // entry of the directory (file or dir)
     struct dirent *entry;
-
+    // the current directory name
     printf(BLUE "\t%s :\n" reset, path);
 
-    char *files[MAX_FILES];
+    char *files[MAX_FILES]; // entries array
     int j = 0, max_len = 0;
 
+    // iterate through the directoy
     while ((entry = readdir(dir))) {
+        // get the extention of the file
         if (strncmp(entry->d_name, ".", 1) != 0) {
             if (j < MAX_FILES) {
+                // add the file name to the array
                 files[j] = strdup(entry->d_name);
+                // compute the current maximum length
+                // for the file printing justification
                 size_t len = strlen(files[j]);
                 if (len > max_len) 
                     max_len = len;
                 j++;
             } else {
-                break;
+                break; // files with no extension are not accounted for
             }
         }
     }
-
+    // distance between columns
     int separation = max_len + 4;
 
+    // print files
     for (int k = 0; k < j; k++) {
         printf(GREEN "%-*s" reset, (int)(max_len + separation), files[k]);
 
@@ -58,6 +66,7 @@ int recDir(char *path) {
         }
     }
 
+    // cleanup:
     for (int k = 0; k < j; k++) {
         free(files[k]);
     }
@@ -68,32 +77,37 @@ int recDir(char *path) {
     return SUC_STATUS;
 }
 
-
+// print the current working directory
 int pwd(char **args) {
+    // no arguments are required for this command
     if (args[1] != NULL) {
         fprintf(stderr, "Too many arguments\n");
         return ERR_STATUS;
     } 
 
+    // allocate memory for the path string
     char *path = (char *)malloc((PATH_MAX + 1) * sizeof(char));
     if (path == NULL) {
         fprintf(stderr, "Failed to allocate memory\n");
         return ERR_STATUS;
     }
 
+    // get the current working directory path
     path = getcwd(path, PATH_MAX + 1);
     if (path == NULL) {
         fprintf(stderr, "Failed to get current working directory\n");
         return ERR_STATUS;
     }
 
+    // print and free
     printf("%s\n", path);
     free(path);
     return SUC_STATUS;
 }
 
-
+// list a directoy 
 int ls(char **args) {
+    // open the current directory
     DIR *dir = opendir(".");
     if (dir == NULL) {
         perror("Error opening current directory");
@@ -101,13 +115,20 @@ int ls(char **args) {
     }
 
     char cwd[PATH_MAX];
+    // if no arguments are provided then print cwd
     if (args[1] == NULL) {
+        // use the recDir function for the current directory to list
         if (recDir(getcwd(cwd, sizeof(cwd))) != 0) {
             return ERR_STATUS;
         }
     } else {
+        // get the length of the provided argument
         size_t len = strlen(args[1]);
+        // check if the provided directoy path
+        // has a valid directory path
         if (len > 0 && args[1][len - 1] != '/') {
+            // add the '/' at the end of the path for opening
+            // this is assuming UNIX like operating system
             args[1] = (char*)realloc(args[1], len + 2);
             if (args[1] == NULL) {
                 fprintf(stderr, "Failed to allocate memory\n");
@@ -115,6 +136,7 @@ int ls(char **args) {
             }
             strcat(args[1], "/");
         }
+        // call recDir on the provided argument
         if (recDir(args[1]) != 0) {
             return ERR_STATUS;
         }
@@ -124,13 +146,16 @@ int ls(char **args) {
     return SUC_STATUS;
 }
 
-
+// this function does not have printing to a file
+// functionality , you can add it if you want
 int echo(char **args) {
     int i = 1;
+    // provide a string to echo it 
     if (args[1] == NULL) {
         fprintf(stderr, "Usage : echo..[string]..[string]..\n");
         return ERR_STATUS;
     }
+    // print provided arguments
     while (args[i] != NULL) {
         printf("%s ", args[i]);
         i++;
@@ -141,126 +166,81 @@ int echo(char **args) {
     return (i > 1) ? SUC_STATUS : ERR_STATUS;
 }
 
-
 void cd_usage() {
     fprintf(stderr, "cd usage : cd [directory]\n");
     fprintf(stderr, "cd .. => go to parent dir\n");
 }
 
-
+// change the current working directory 
 int cd(char **args) {
+    // need to provide a directoy to change to 
     if (args[1] == NULL) {
         cd_usage();
         return ERR_STATUS;
-    } else {
-        if (strcmp(args[1], ".") == 0) {
-            char cwd[1024];
-            if (getcwd(cwd, sizeof(cwd)) != NULL) {
-                printf("Current directory: %s\n", cwd);
-                return SUC_STATUS;
-            } else {
-                perror("getcwd");
-                return ERR_STATUS;
-            }
-        } else if (strcmp(args[1], "..") == 0) {
-            if (chdir("..") != 0) {
-                perror("cd");
-                return ERR_STATUS;
-            } else {
-                return SUC_STATUS;
-            }
+    } 
+    // if entered command is : cd .
+    // then stay in the cwd
+    if (strcmp(args[1], ".") == 0) {
+        char cwd[1024];
+        if (getcwd(cwd, sizeof(cwd)) != NULL) {
+            printf("Current directory: %s\n", cwd);
+            return SUC_STATUS;
         } else {
-            if (chdir(args[1]) != 0) {
-                perror("cd");
-                return ERR_STATUS;
-            } else {
-                return SUC_STATUS;
-            }
+            perror("getcwd");
+            return ERR_STATUS;
         }
-    }
-}
+    } else if (strcmp(args[1], "..") == 0 && chdir("..") != 0) {
+        perror("cd"); // if changing to the parent directory fails
+        return ERR_STATUS; 
+    } else if (chdir(args[1]) != 0) {
+        perror("cd");
+        return ERR_STATUS;
+    } 
 
+    return SUC_STATUS;
+}
 
 void rm_usage() {
     fprintf(stderr, "rm usage : rm *[file]\n");
 }
 
-
+// remove a given file
 int rm(char **args) {
+    // a file path is required
     if (args[1] == NULL) {
         rm_usage();
         return NOTSUP_STATUS;
-    } 
-    char *file = (char *)malloc(PATH_MAX + 1);
-    if (file == NULL) {
-        fprintf(stderr, "Memory allocation failed : %s\n", strerror(errno));
-        return ERR_STATUS;
     }
-
-    strcpy(file, args[1]);
-
-    if (remove(file) != 0) {
-        fprintf(stderr, "failed to remove file : %s\n", file);
-        free(file);
+    // try to remove the file through a syscall
+    if (remove(args[1]) != 0) {
+        fprintf(stderr, "failed to remove file : %s\n", args[1]);
         return NOTSUP_STATUS;
-    } else {
-        free(file);
-        return SUC_STATUS;
-    }
-     
-    return ERR_STATUS;
+    } 
+    
+    return SUC_STATUS;
 }
-
 
 void mv_usage() {
     fprintf(stderr, "mv usage : mv *[filename] -- ""newfilename""");
 }
 
-
+// rename a file
 int mv(char **args) {
-    if (args[1] == NULL) {
+    // at least two arguments are required
+    if (args[1] == NULL || args[2] == NULL) {
         mv_usage();
         return NOTSUP_STATUS;
-    }
-
-    char *originalFilename = (char *)malloc(PATH_MAX + 1);
-    if (originalFilename == NULL) {
-        fprintf(stderr, "Memory allocation failed : %s\n", strerror(errno));
-        return ERR_STATUS;
-    }
-
-    strcpy(originalFilename, args[1]);
-
-    if (args[2] == NULL) {
-        fprintf(stderr, "rm: missing new filename\n");
-        free(originalFilename);
-        return NOTSUP_STATUS;
     } else {
-        char *newFilename = (char *)malloc(MAXNAMLEN + 1);
-        if (newFilename == NULL) {
-            fprintf(stderr, "Memory allocation failed : %s\n", strerror(errno));
-            free(originalFilename);
-            return ERR_STATUS;
-        }
-
-        strcpy(newFilename, args[2]); 
-
-        if (rename(originalFilename, newFilename) != 0) {
+        if (rename(args[1], args[2]) != 0) {
             fprintf(stderr, "Error renaming file : %s\n", originalFilename);
-            free(originalFilename);
-            free(newFilename);
             return NOTSUP_STATUS;
         }
-            
-        free(newFilename);
-    } 
-        
-    free(originalFilename);
+    }
     
     return SUC_STATUS;
 }
 
-
+// open a file
 int shopen(char **args) {
     if (args[1] == NULL) {
         fprintf(stderr, "open: missing file path");
