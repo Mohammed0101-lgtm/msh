@@ -241,36 +241,46 @@ int mv(char **args) {
 }
 
 // open a file
+
 int shopen(char **args) {
     if (args[1] == NULL) {
         fprintf(stderr, "open: missing file path");
         return NOTSUP_STATUS;
     } 
-    char *command = (char *)malloc(MAXNAMLEN + 1);
+
+    size_t buf_size = MAX_CANON;
+    char *command = (char *)malloc((buf_size + 1) * sizeof(char));
     if (command == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         return ERR_STATUS;
     }
 
-    int i = 1;
     strcpy(command, args[0]);
     strcat(command, " ");
 
+    int i = 1;
     while (args[i] != NULL) {
-        if (strlen(command) + strlen(args[i]) <= MAXNAMLEN) {
+        if (strlen(command) + strlen(args[i]) <= buf_size) {
             strcat(command, args[i]);
             if (args[i + 1] != NULL) {
                 strcat(command, " ");
             } 
         } else {
-            fprintf(stderr, "Concatenation would exceed MAXNAMLEN\n");
+            buf_size += buf_size;
+            command = (char*)realloc(command, (buf_size + 1) * sizeof(char));
+            if (command == NULL) {
+                fprintf(stderr, "Memory reallocation failed!\n");
+                free(command);
+                return ERR_STATUS;
+            }
+            /* fprintf(stderr, "Concatenation would exceed MAXNAMLEN\n");
             free(command);
-            return ERR_STATUS;
+            return ERR_STATUS; */
         }
 
         i++;
     }
-        
+    // fork the process
     pid_t pid = fork();
 
     if (pid == 0) {
