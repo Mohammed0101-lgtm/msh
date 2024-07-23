@@ -2,10 +2,10 @@ This repo contains the implementation for a basic interactive interface for a co
 it should be notable that this does not create a shell from the ground up , the commands are implemented from scratch, but
 the main program is running on the existing shell where the executable is executed.
 
-## reading input :
+## reading input 
     the input for the shell (command entered by the user) is registered as a simple string,
     the sequence of characters is terminated when the user presses 'ENTER'.
-    '''
+    ```
         ..
         // allocate memory for the input
         char *line = malloc(MAX_WIDTH);
@@ -13,14 +13,14 @@ the main program is running on the existing shell where the executable is execut
         // .. read input
         fgets(line, MAX_WIDTH, stdin);
         ...
-    '''
+    ```
 
 ## input tokenisation 
         the commands should be (in most cases) seperated by spaces, that means that the tokens are 
     determined by the common space delimiters : '\t', '\r', '\n', ' '.
     Tokens are stored in an array for easy random access and the array is NULL terminated (adding
     a NULL pointer to the end to mark the end in a variable size array).
-    '''
+    ```
         // allocate memory for the tokens array 
         char **tokens = malloc(MAX_TOKENS);
         ...
@@ -33,16 +33,16 @@ the main program is running on the existing shell where the executable is execut
         }
         // NULL terminate the array
         tokens[i] = NULL;
-    '''
+    ```
 
 ## input processing 
       Now that the arguments are saved in array, we will always (for the time being) consider the first 
     argument as the command to execute, while the rest of the arguments in the line are considered
     'command line arguments' for the command.
-    '''
+    ```
         char **args = tok_line(input);
         char *command = args[0];
-    '''
+    ```
 
 ## executing commands 
         commands are compared with a predefined list of supported commands, even in modern shells
@@ -51,10 +51,10 @@ the main program is running on the existing shell where the executable is execut
 
     for example:
 
-    '''
+    ```
         static char *builtin_func_list[] = { "ls", "cd"};
         static int (*builtin_func[])(char **) = { &ls, &cd}
-    ''' 
+    ``` 
 
     We need to make sure that each commad string is alligned with the corresponding function reference
     so that we don't wind up executing a different command
@@ -66,13 +66,13 @@ the main program is running on the existing shell where the executable is execut
     For that we will create a child process to run the command under the shell process and handle
     errors and file operations seperately
 
-    '''
+    ```
         // this will fork the current process and create a child process 
         // returning the process id for the child process 
         pid_t process_id = fork();
 
         // we then execute the command seperately
-    '''
+    ```
 
 ## command functions 
         I defined the command functions in a seperate file, making adding and modifying functions easier.
