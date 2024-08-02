@@ -12,9 +12,10 @@ typedef struct node node;
 #define MAX_LINE_WIDTH 40
 
 #define TOK_DELIM " \t\r\n\a\"_()#*;"
-#define GREEN "\x1b[32m"
-#define BLUE "\x1b[34m"
-#define WHITE "\x1b[37m"
+#define GREEN     "\x1b[32m"
+#define BLUE      "\x1b[34m"
+#define WHITE     "\x1b[37m"
+
 #define PATH_MAX 1024
 
 //Regular text
