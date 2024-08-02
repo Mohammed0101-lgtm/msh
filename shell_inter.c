@@ -14,9 +14,9 @@
 
 
 int shell_inter() {
-    char *line;
-    char **args;
-    int status = 0;
+    char *line  = NULL;
+    char **args = NULL;
+    int status  = 0;
 
     do {
         char username[_SC_LOGIN_NAME_MAX];
@@ -24,24 +24,27 @@ int shell_inter() {
         char cwd[PATH_MAX];
 
         if (getlogin_r(username, sizeof(username)) != 0) {
-            fprintf(stderr, "Error getting username : %s\n", strerror(errno));
+            fprintf(stderr, 
+                    "Error getting username : %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
 
         if (gethostname(hostname, sizeof(hostname)) != 0) {
-            fprintf(stderr, "Error getting hostname : %s\n", strerror(errno));
+            fprintf(stderr, 
+                    "Error getting hostname : %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
 
-        if (getcwd(cwd, sizeof(cwd)) == NULL) {
-            fprintf(stderr, "Error getting current working directory : %s\n", strerror(errno));
+        if (!getcwd(cwd, sizeof(cwd))) {
+            fprintf(stderr, 
+                    "Error getting current working directory : %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
 
         printf(CYN "%s@%s@%s$ " reset, username, hostname, cwd);
 
-        line = read_line();
-        args = tok_line(line);
+        line   = read_line();
+        args   = tok_line(line);
         status = exec_cmd(args);
         
         free(line);
@@ -53,10 +56,11 @@ int shell_inter() {
 }
 
 void shell_non_inter() {
-    char *line;
+    char *line = NULL;
+    
     while ((line = read_line()) != NULL) {
         char **args = tok_line(line);
-        int status = exec_cmd(args);
+        int status  = exec_cmd(args);
 
         free(line);
         free(args);
