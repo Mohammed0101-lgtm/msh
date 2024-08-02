@@ -21,7 +21,7 @@
 #define _POSIX_SOURCE
 #define _XOPEN_SOURCE_EXTENDED 1
 
-const int MAX_FILES = 128;
+const int MAX_FILES       = 128;
 const int rows = 4, width = 84;
 
 // print the directory content : ls helper function
