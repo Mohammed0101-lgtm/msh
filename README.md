@@ -33,6 +33,7 @@ while (token !=  NULL) {
 }
 // NULL terminate the array
 tokens[i] = NULL;
+...
 ```
 
 ## input processing 

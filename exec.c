@@ -8,40 +8,39 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/wait.h> 
 
-// creating new process for the command execution
-int new_process(char **args, int command) {
-    pid_t pid = fork(); // create child process
+// Creating a new process for command execution
+int new_process(char **args, int (*func)(char **)) {
+    pid_t pid = fork(); // Create child process
     int status;
 
     if (pid == 0) {
-        // execute through a function callback
-        int result = command;
+        // Child process
+        int result = func(args);
         
         if (result == ERR_STATUS) {
             fprintf(stderr, 
-                    "Error forking process : %s\n", strerror(errno));
-            
-            _exit(EXIT_FAILURE);
+                    RED "Error executing command : %s\n" reset, strerror(errno));
         }
         
-        _exit(EXIT_SUCCESS); // exit child process
+        _exit(result); // Exit child process with the result of the command
     } else if (pid < 0) {
-        fprintf(stderr, 
-                "Error in creating child process : %s\n", strerror(errno));
-        
+        // Fork failed
+        fprintf(stderr,
+                RED "Error in creating child process : %s\n" reset, strerror(errno));
         return ERR_STATUS;
     } else {
-        // wait for the child process to execute
+        // Parent process: wait for the child process to finish
         do {
             waitpid(pid, &status, WUNTRACED);
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
 
-    return NOTSUP_STATUS;
+    return WEXITSTATUS(status); // Return the exit status of the child process
 }
 
-// supported commands and corresponding pointers to the function
+// Supported commands and corresponding pointers to the functions
 int exec_cmd(char **args) {
     static char *builtin_func_list[] = {
         "ls",
@@ -81,21 +80,22 @@ int exec_cmd(char **args) {
 
     if (!args[0]) {
         fprintf(stderr, 
-                "Invalid command\n");
-        
+                RED "Invalid command\n" reset);
         return NOTSUP_STATUS;
     } 
-    else if (strcmp(args[0], "exit")) 
-        exit(EXIT_SUCCESS); 
+    else if (strcmp(args[0], "exit") == 0) {
+        exit(EXIT_SUCCESS);
+    }
 
-    // find the command to execute
-    for (int i = 0, n = sizeof(builtin_func_list) / sizeof(char *); i < n; i++) 
-        if (strcmp(args[0], builtin_func_list[i]) == 0) 
-            return new_process(args, ((*builtin_func[i])(args)));
+    // Find and execute the command
+    for (int i = 0, n = sizeof(builtin_func_list) / sizeof(char *); i < n; i++) {
+        if (strcmp(args[0], builtin_func_list[i]) == 0) {
+            return new_process(args, builtin_func[i]);
+        }
+    }
 
-    // if the command is not found
+    // Command not found
     fprintf(stderr, 
-            "%s : Unsupported command\n", args[0]);
-    
+            RED "%s : Unsupported command\n" reset, args[0]);
     return NOTSUP_STATUS;
 }

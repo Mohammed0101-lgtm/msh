@@ -25,19 +25,19 @@ int shell_inter() {
 
         if (getlogin_r(username, sizeof(username)) != 0) {
             fprintf(stderr, 
-                    "Error getting username : %s\n", strerror(errno));
+                    RED "Error getting username : %s\n" reset, strerror(errno));
             exit(EXIT_FAILURE);
         }
 
         if (gethostname(hostname, sizeof(hostname)) != 0) {
             fprintf(stderr, 
-                    "Error getting hostname : %s\n", strerror(errno));
+                    RED "Error getting hostname : %s\n" reset, strerror(errno));
             exit(EXIT_FAILURE);
         }
 
         if (!getcwd(cwd, sizeof(cwd))) {
             fprintf(stderr, 
-                    "Error getting current working directory : %s\n", strerror(errno));
+                    RED "Error getting current working directory : %s\n" reset, strerror(errno));
             exit(EXIT_FAILURE);
         }
 
@@ -66,7 +66,8 @@ void shell_non_inter() {
         free(args);
 
         if (status == EXIT_FAILURE) {
-            fprintf(stderr, "Error: Unsupported command\n");
+            fprintf(stderr, 
+                    RED "Error: Unsupported command\n" reset);
         }
     }
 }

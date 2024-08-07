@@ -49,13 +49,13 @@ char *read_line() {
 // read commands from a file
 char *read_stream() {
     int i           = 0;
-    size_t buf_size = BUFSIZ;
+    size_t buf_size = 64;
     char *line      = (char *)malloc(buf_size * sizeof(char));
     int character;
     
     if (!line) {
         fprintf(stderr,     
-                "Memory allocation failed!\n");
+                RED "Memory allocation failed!\n" reset);
         
         exit(EXIT_FAILURE);
     }
@@ -73,7 +73,7 @@ char *read_stream() {
 
             if (temp == NULL) {
                 fprintf(stderr, 
-                        "Memory reallocation failed (read_stream)! : %s\n", strerror(errno));
+                        RED "Memory reallocation failed (read_stream)! : %s\n" reset, strerror(errno));
                 
                 free(line);
                 exit(EXIT_FAILURE);
@@ -95,7 +95,7 @@ char **tok_line(char *line) {
     
     if (!tokens) {
         fprintf(stderr,     
-                "Memory allocation failed (tokenize line) : %s\n", strerror(errno));
+                RED "Memory allocation failed (tokenize line) : %s\n" reset, strerror(errno));
         
         exit(EXIT_FAILURE);
     }
@@ -117,8 +117,9 @@ char **tok_line(char *line) {
             buf_size += buf_size; // double the buffer size
             // realloc memory at the same region
             char *temp = (char *)realloc(tokens, buf_size * sizeof(char));
-            if (temp == NULL) {
-                fprintf(stderr, "Memory reallocation failed (read_stream)! : %s\n", strerror(errno));
+            if (!temp) {
+                fprintf(stderr, 
+                        RED "Memory reallocation failed (read_stream)! : %s\n" reset, strerror(errno));
                 free(line);  
                 exit(EXIT_FAILURE);
             }
