@@ -4,6 +4,9 @@
 #include "config.h"
 #include "shell_inter.h"
 
+#include <cassert>
+#include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
