@@ -924,11 +924,12 @@ int build(char **args) {
                     break;
                 }
  
-                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) 
+                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) { 
                     found = 1;
-                else 
+                } else { 
                     fprintf(stderr, 
                             RED "Compilation failed\n" reset);
+                }
             }
         }
         
