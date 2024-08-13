@@ -937,16 +937,18 @@ int build(char **args) {
     }
 
     // cleanup
-    for (int k = 0; k < j; k++) 
+    for (int k = 0; k < j; k++) { 
         free(files[k]);
-        
+    }
+    
     free(files);
     free(exec_file);
     free(searchPath);
 
-    if (!found) 
+    if (found == false) {
         return ERR_STATUS; // check state
-
+    }
+        
     return SUC_STATUS;
 }
 
@@ -954,7 +956,7 @@ int build(char **args) {
 int print_head(char *filename, int size) {
     // open file in reading mode
     FILE *fp = fopen(filename, "r");
-    if (!fp) {
+    if (fp == NULL) {
         fprintf(stderr, 
                 RED "file not found : %s\n" reset, filename);
         return ERR_STATUS;
@@ -966,7 +968,7 @@ int print_head(char *filename, int size) {
     size_t buf_siz      = max_lines * MAX_WIDTH * sizeof(char) + 1;
     
     char *buffer = (char*)malloc(buf_siz);
-    if (!buffer) {
+    if (buffer == NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory\n" reset);
         
@@ -1009,8 +1011,9 @@ int print_head(char *filename, int size) {
     int lastline = 0;
     
     for (size_t i = 0; i < buf_siz; i++) {
-        if (buffer[i] == '\n') 
+        if (buffer[i] == '\n') {
             lineCounter++;
+        }
         
         if (lineCounter == 10) {
             lastline = i;
@@ -1020,9 +1023,10 @@ int print_head(char *filename, int size) {
     
     buffer[lastline + 1] = '\0';
     
-    if (size != 0) 
+    if (size != 0) {
         printf(GREEN "==> %s <==\n" reset, filename);
-    
+    }
+        
     printf("%s", buffer);
     free(buffer);
     
@@ -1031,22 +1035,23 @@ int print_head(char *filename, int size) {
 
 // print the first ten lines of a readable file
 int head(char **args) {
-    if (!args[1]) {
+    if (args[1] == NULL) {
         fprintf(stderr, 
                 RED "head() : missing file path\n" reset);
     
         return ERR_STATUS;
-    } 
-    else if (!args[2]) 
+    } else if (!args[2]) {
         return print_head(args[1], 0);
-
+    }
+    
     // if there is more then one
     // file is provided in command
     int i = 1;
-    while (args[i]) {
-        if (print_head(args[i], 1) != SUC_STATUS) 
+    while (args[i] != NULL) {
+        if (print_head(args[i], 1) != SUC_STATUS) { 
             return ERR_STATUS;
-            
+        }
+        
         i++;
     }   
 
