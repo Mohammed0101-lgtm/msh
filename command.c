@@ -890,8 +890,7 @@ int build(char **args) {
     char *dir = strtok(searchPath, &delimiter);
     int found = 0; // keep track of the state
 
-    while (dir && !found) {
-
+    while (dir != NULL && found == false) {
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, compCmd);
 
@@ -903,8 +902,9 @@ int build(char **args) {
                 char *execArgs[size + 1];
                 execArgs[0] = compCmd;
  
-                for (i = 0; i < j; i++) 
+                for (i = 0; i < j; i++) {
                     execArgs[i + 1] = files[i];
+                }
         
                 execArgs[j + 1] = exec_file;
                 execArgs[j + 2] = NULL;
