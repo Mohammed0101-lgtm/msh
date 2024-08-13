@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/wait.h> 
+#include <sys/wait.h>
 
 // Creating a new process for command execution
 int new_process(char **args, int (*func)(char **)) {
@@ -82,8 +82,7 @@ int exec_cmd(char **args) {
         fprintf(stderr, 
                 RED "Invalid command\n" reset);
         return NOTSUP_STATUS;
-    } 
-    else if (strcmp(args[0], "exit") == 0) {
+    } else if (strcmp(args[0], "exit") == 0) {
         exit(EXIT_SUCCESS);
     }
 

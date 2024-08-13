@@ -1,8 +1,8 @@
 
 // This file containes the implemenetation of the supported shell commands
+#include "shell_inter.h"
 #include "command.h"
 #include "config.h"
-#include "shell_inter.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -194,7 +194,7 @@ int ls(char **args) {
 int echo(char **args) {
     int i = 1;
     // provide a string to echo it 
-    if (!args[1]) {
+    if (args[1] == NULL) {
         fprintf(stderr, 
                 YEL "Usage : echo..[string]..[string]..\n" reset);
         
@@ -202,7 +202,7 @@ int echo(char **args) {
     }
     
     // print provided arguments
-    while (args[i]) 
+    while (args[i] != NULL) 
         printf("%s ", args[i++]);
 
     printf("\n");
@@ -218,7 +218,7 @@ void cd_usage() {
 // change the current working directory 
 int cd(char **args) {
     // need to provide a directoy to change to 
-    if (!args[1]) {
+    if (args[1] == NULL) {
         cd_usage();
         return ERR_STATUS;
     } 
@@ -253,10 +253,11 @@ void rm_usage() {
 // remove a given file
 int rm(char **args) {
     // a file path is required
-    if (!args[1]) {
+    if (args[1] == NULL) {
         rm_usage();
         return NOTSUP_STATUS;
     }
+
     // try to remove the file through a syscall
     if (remove(args[1]) != 0) {
         fprintf(stderr, 
@@ -295,7 +296,7 @@ int mv(char **args) {
 
 // open a file
 int shopen(char **args) {
-    if (!args[1]) {
+    if (args[1] == NULL) {
         fprintf(stderr, 
                 RED "open: missing file path" reset);
         
@@ -305,7 +306,7 @@ int shopen(char **args) {
     size_t buf_size = 64;
     char *command   = (char *)malloc((buf_size + 1) * sizeof(char));
     
-    if (!command) {
+    if (command == NULL) {
         fprintf(stderr, 
                 RED "Memory allocation failed\n" reset "open()\n");
         
@@ -316,7 +317,7 @@ int shopen(char **args) {
     strcat(command, " ");
 
     int i = 1;
-    while (args[i]) {
+    while (args[i] != NULL) {
         if (strlen(command) + strlen(args[i]) <= buf_size) {
             strcat(command, args[i]);
             
@@ -326,7 +327,7 @@ int shopen(char **args) {
             buf_size += buf_size;
             command   = (char*)realloc(command, (buf_size + 1) * sizeof(char));
             
-            if (!command) {
+            if (command == NULL) {
                 fprintf(stderr, 
                         RED "Memory reallocation failed!\n" reset "open()\n");
                 
@@ -379,7 +380,7 @@ int shopen(char **args) {
 int touch(char **args) {
     // no spaces all lower case should 
     // be the converntion of filenames
-    if (!args[1]) {
+    if (args[1] == NULL) {
         fprintf(stderr, 
                 RED "touch: missing file path\n" reset);
      
@@ -388,7 +389,7 @@ int touch(char **args) {
 
     // create the file
     FILE *new_file = fopen(args[1], "w");
-    if (!new_file) {
+    if (new_file == NULL) {
         fprintf(stderr, 
                 RED "Failed to create file: %s\n" reset, args[1]);
         
@@ -402,7 +403,7 @@ int touch(char **args) {
 
 // compile a c program
 int cmake(char **args) {
-    if (!args[1]) {
+    if (args[1] == NULL) {
         fprintf(stderr, 
                 RED "cmake: missing filepath\n" reset);
         
@@ -421,7 +422,7 @@ int cmake(char **args) {
     // the program, if it doesn't find it then the user is 
     // forced to install it
     char *envPath = getenv("PATH"); 
-    if (!envPath) {
+    if (envPath == NULL) {
         fprintf(stderr, 
                 RED "Failed to retrieve environment 'PATH' variable: %s\n" reset, strerror(errno));
         
@@ -444,7 +445,7 @@ int cmake(char **args) {
     char *dir = strtok(searchPath, &delimiter);
     
     // go through earch dir in the path till finding clang
-    while (dir) {
+    while (dir != NULL) {
         // the expected path if 'clang' exists
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, compCmd);
@@ -496,7 +497,7 @@ int cmake(char **args) {
 
 // running an executable file 
 int run(char **args) {
-    if (!args[1]) {
+    if (args[1] == NULL) {
         fprintf(stderr, 
                 RED "run: missing executable file path\n" reset);
         
@@ -504,11 +505,11 @@ int run(char **args) {
     }
 
     // if the argument an executable
-    if (access(args[1], X_OK)) {
+    if (access(args[1], X_OK) == 0) {
         // construct the executable command
         // for the system call - exporting
         char *exec_cmd = (char *)malloc(MAXNAMLEN + 3);
-        if (!exec_cmd) {
+        if (exec_cmd == NULL) {
             fprintf(stderr, 
                     RED "Memory allocation failed\n" reset);
             
@@ -581,6 +582,7 @@ int createDirectory(char **args) {
     if (!S_ISDIR(path_stat.st_mode)) {
         fprintf(stderr, 
                 RED "Failed to create directory\n" reset);
+        
         return ERR_STATUS;
     }
 
@@ -590,7 +592,7 @@ int createDirectory(char **args) {
 // clang cmd in case 
 int clang(char **args) {
     char *clangCmd = strdup(args[0]);
-    if (!clangCmd) {
+    if (clangCmd == NULL) {
         fprintf(stderr,     
                 RED "Failed to allocate memory : strdup()\n" reset);
         
@@ -602,7 +604,7 @@ int clang(char **args) {
         ;
     
     char *c_file = strdup(args[1]);
-    if (!c_file) {
+    if (c_file == NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory : strdup()\n" reset);
         
@@ -611,7 +613,7 @@ int clang(char **args) {
     }
 
     char *exec_file = strdup(args[3]);
-    if (!exec_file) {
+    if (exec_file == NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory : strdup()\n" reset);
         
