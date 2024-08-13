@@ -32,18 +32,21 @@ int recDir(char *path) {
     if (path == NULL) { 
         return ERR_STATUS;
     }
-        
+
+    // open the specified directory 
     DIR *dir = opendir(path);
     if (dir == NULL) {
         return ERR_STATUS;
     }
-        
-    struct dirent *entry;
+
+    // pointer for each entry in the directory
+    struct dirent *entry; 
 
     // Print the directory name
     printf(BBLU "\t%s :\n" reset, path);
 
-    size_t buf_size = 32;
+    size_t buf_size = 32; // initial buffer for the files
+
     char **files = (char **)malloc(buf_size * sizeof(char *)); // Allocate space for file names
     if (files == NULL) {
         fprintf(stderr, RED "Failed to allocate memory!\n" reset "recDir()\n");
@@ -51,15 +54,17 @@ int recDir(char *path) {
         return ERR_STATUS;
     }
 
-    size_t j = 0;
-    size_t max_len = 0;
+    size_t j = 0; 
+    size_t max_len = 0; 
 
     // Iterate through the directory
     while ((entry = readdir(dir))) {
         // Skip hidden files (names starting with '.')
         if (strncmp(entry->d_name, ".", 1) != 0) {
+            // reallocate memory for extra files if needed
             if (j >= buf_size) {
                 buf_size *= 2;
+
                 char **temp = (char **)realloc(files, buf_size * sizeof(char *));
                 if (temp == NULL) {
                     fprintf(stderr, RED "Failed to reallocate memory\n" reset "recDir()\n");
@@ -67,21 +72,22 @@ int recDir(char *path) {
                     for (size_t k = 0; k < j; k++) {
                         free(files[k]);
                     }
-                    
+
                     free(files);
                     closedir(dir);
                     return ERR_STATUS;
                 }
+
                 files = temp;
             }
 
             files[j] = strdup(entry->d_name);
-            if (files[j] != NULL) {
+            if (files[j]) {
                 size_t len = strlen(files[j]);
                 if (len > max_len) { 
                     max_len = len;
                 }
-                
+
                 j++;
             } else {
                 fprintf(stderr, RED "Failed to duplicate string\n" reset "recDir()\n");
@@ -89,7 +95,7 @@ int recDir(char *path) {
                 for (size_t k = 0; k < j; k++) {
                     free(files[k]);
                 }
-                
+
                 free(files);
                 closedir(dir);
                 return ERR_STATUS;
@@ -101,17 +107,19 @@ int recDir(char *path) {
     int separation = max_len + 4;
     for (size_t k = 0; k < j; k++) {
         printf(GREEN "%-*s" reset, (int)(max_len + separation), files[k]);
+        
         if ((k + 1) % 4 == 0) {
             printf("\n");
         }
     }
+
     printf("\n");
 
     // Cleanup
     for (size_t k = 0; k < j; k++) {
         free(files[k]);
     }
-    
+
     free(files);
     closedir(dir);
 
@@ -158,6 +166,7 @@ int ls(char **args) {
     if (dir == NULL) {
         fprintf(stderr,
                 RED "Error opening current directory\n" reset);
+        
         return ERR_STATUS;
     }
 
@@ -167,6 +176,7 @@ int ls(char **args) {
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
             fprintf(stderr, 
                     RED "Error getting current working directory\n" reset);
+        
             closedir(dir);
             return ERR_STATUS;
         }
@@ -183,10 +193,11 @@ int ls(char **args) {
             if (new_path == NULL) {
                 fprintf(stderr, 
                         RED "Failed to allocate memory\n" reset "ls()\n");
+        
                 closedir(dir);
                 return ERR_STATUS;
             }
-            
+        
             args[1] = new_path;
             strcat(args[1], "/");
         }
@@ -218,7 +229,7 @@ int echo(char **args) {
     while (args[i] != NULL) {
         printf("%s ", args[i++]);
     }
-    
+
     printf("\n");
 
     return (i > 1) ? SUC_STATUS : ERR_STATUS;
@@ -241,6 +252,7 @@ int cd(char **args) {
     // then stay in the cwd
     if (strcmp(args[1], ".")) {
         char cwd[1024];
+      
         if (getcwd(cwd, sizeof(cwd)) != NULL) {
             printf("Current directory: %s\n", cwd);
             return SUC_STATUS;
@@ -260,8 +272,7 @@ int cd(char **args) {
 }
 
 void rm_usage() {
-    fprintf(stderr, 
-            YEL "rm usage : rm *[file]\n" reset);
+    fprintf(stderr, YEL "rm usage : rm *[file]\n" reset);
 }
 
 // remove a given file
@@ -284,8 +295,7 @@ int rm(char **args) {
 }
 
 void mv_usage() {
-    fprintf(stderr, 
-            YEL "mv usage : mv *[filename] -- ""newfilename""" reset);
+    fprintf(stderr, YEL "mv usage : mv *[filename] -- ""newfilename""" reset);
 }
 
 // rename a file
@@ -294,7 +304,8 @@ int mv(char **args) {
     if (args[1] == NULL || args[2] == NULL) {
         mv_usage();
         return NOTSUP_STATUS;
-    } else { 
+    } 
+    else 
         // try renaming the file through a system call
         if (rename(args[1], args[2]) != 0) {
             fprintf(stderr, 
@@ -302,7 +313,6 @@ int mv(char **args) {
             
             return NOTSUP_STATUS;
         }
-    }
     
     return SUC_STATUS;
 }
@@ -335,8 +345,9 @@ int shopen(char **args) {
         if (strlen(command) + strlen(args[i]) <= buf_size) {
             strcat(command, args[i]);
             
-            if (args[i + 1] != NULL) 
+            if (args[i + 1] != NULL) {
                 strcat(command, " "); 
+            }
         } else {
             buf_size += buf_size;
             command   = (char*)realloc(command, (buf_size + 1) * sizeof(char));
@@ -428,8 +439,9 @@ int cmake(char **args) {
     char *executableFile = strdup(filename);
     char *dot_position   = strrchr(executableFile, '.');// get the '.' position to remove the extension
 
-    if (dot_position) 
+    if (dot_position != NULL) {
         *dot_position = '\0';
+    }
 
     // get the environment path variable which stores 
     // the path to the clang file which is used to compile
@@ -573,7 +585,7 @@ int run(char **args) {
 // implementing mkdir
 int createDirectory(char **args) {
     // provide the dirname
-    if (!args[1]) {
+    if (args[1] == NULL) {
         fprintf(stderr, 
                 YEL "Usage: createDirectory <directory_name>\n" reset);
         
@@ -583,11 +595,12 @@ int createDirectory(char **args) {
     struct stat st = {0};
      
     // create dir
-    if (stat(args[1], &st) == -1) 
+    if (stat(args[1], &st) == -1) {
         if (mkdir(args[1], 0777) != 0) {
             perror("mkdir");
             return ERR_STATUS;
         }
+    }
 
     // check if the dir making is successful
     struct stat path_stat;
@@ -656,13 +669,13 @@ int clang(char **args) {
 
     const char delimiter = ':';
 
-    char searchPath[PATH_MAX];    
+    char       searchPath[PATH_MAX];    
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
 
     char *dir = strtok(searchPath, &delimiter);
     
-    while (dir != NULL) {
+    while (dir) {
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, clangCmd);
 
@@ -704,7 +717,7 @@ int clang(char **args) {
 int comake(char **args) {
     // clang is the default and object
     // files default to '.o' extention
-    if (!args[1]) {
+    if (args[1] == NULL) {
         fprintf(stderr, 
                 YEL "Usage: comake -<filename>-..[OPTION] : <flag>\n" reset);
         
@@ -715,10 +728,10 @@ int comake(char **args) {
     char *objectFile   = strdup(filename); // copy the filename for the object file
     char *dot_position = strrchr(objectFile, '.'); // remove the original file ext
 
-    if (dot_position != NULL) {
+    if (dot_position == NULL) { 
         *dot_position = '\0';
     }
-    
+
     strcat(objectFile, ".o"); // add the '.o' add the end
 
     char *envPath = getenv("PATH");
@@ -733,8 +746,8 @@ int comake(char **args) {
 
     // construct the search path for 'clang'
     const char *compCmd  = "clang";
-    const char  delimiter = ':';
-    char        searchPath[PATH_MAX];
+    const char delimiter = ':';
+    char       searchPath[PATH_MAX];
     
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
@@ -742,7 +755,7 @@ int comake(char **args) {
     // execute the command via syscall
     char *dir = strtok(searchPath, &delimiter);
     
-    while (dir != NULL) {
+    while (dir) {
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, compCmd);
 
@@ -788,7 +801,7 @@ int build(char **args) {
 
     // get the current working directory
     char cwd[PATH_MAX];
-    if (getcwd(cwd, sizeof(cwd)) == 0) {
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
         perror("getcwd() error");
         return ERR_STATUS;
     }
@@ -825,6 +838,7 @@ int build(char **args) {
             for (int k = 0; k < j; k++) {
                 free(files[k]);
             }
+
             free(files);
  
             return ERR_STATUS;
@@ -843,7 +857,7 @@ int build(char **args) {
         for (int k = 0; k < j; k++) {
             free(files[k]);
         }
- 
+
         free(files);
  
         return ERR_STATUS;
@@ -856,7 +870,7 @@ int build(char **args) {
         fprintf(stderr, 
                 RED "Failed to get the environment path variable : build()\n" reset);
         
-        for (int k = 0; k < j; k++) { 
+        for (int k = 0; k < j; k++) {
             free(files[k]);
         }
  
@@ -872,11 +886,11 @@ int build(char **args) {
 
     // dynamic search path for clang
     char *searchPath = strdup(envPath);
-    if (searchPath != NULL) {
+    if (searchPath == NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory : strdup()\n" reset);
         
-        for (int k = 0; k < j; k++) { 
+        for (int k = 0; k < j; k++) {
             free(files[k]);
         }
  
@@ -888,9 +902,10 @@ int build(char **args) {
 
     // tokenize path for the search
     char *dir = strtok(searchPath, &delimiter);
-    int found = 0; // keep track of the state
+    bool found = 0; // keep track of the state
 
-    while (dir != NULL && found == false) {
+    while (dir && !found) {
+
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, compCmd);
 
@@ -924,12 +939,12 @@ int build(char **args) {
                     break;
                 }
  
-                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) { 
-                    found = 1;
-                } else { 
+                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                    found = true;
+                } else {
                     fprintf(stderr, 
                             RED "Compilation failed\n" reset);
-                }
+                } 
             }
         }
         
@@ -937,10 +952,10 @@ int build(char **args) {
     }
 
     // cleanup
-    for (int k = 0; k < j; k++) { 
+    for (int k = 0; k < j; k++) {
         free(files[k]);
     }
-    
+        
     free(files);
     free(exec_file);
     free(searchPath);
@@ -948,7 +963,7 @@ int build(char **args) {
     if (found == false) {
         return ERR_STATUS; // check state
     }
-        
+
     return SUC_STATUS;
 }
 
@@ -959,6 +974,7 @@ int print_head(char *filename, int size) {
     if (fp == NULL) {
         fprintf(stderr, 
                 RED "file not found : %s\n" reset, filename);
+
         return ERR_STATUS;
     }  
 
@@ -1026,7 +1042,7 @@ int print_head(char *filename, int size) {
     if (size != 0) {
         printf(GREEN "==> %s <==\n" reset, filename);
     }
-        
+    
     printf("%s", buffer);
     free(buffer);
     
@@ -1040,18 +1056,18 @@ int head(char **args) {
                 RED "head() : missing file path\n" reset);
     
         return ERR_STATUS;
-    } else if (!args[2]) {
+    } else if (args[2] == NULL) {
         return print_head(args[1], 0);
     }
-    
+
     // if there is more then one
     // file is provided in command
     int i = 1;
     while (args[i] != NULL) {
-        if (print_head(args[i], 1) != SUC_STATUS) { 
+        if (print_head(args[i], 1) != SUC_STATUS) {
             return ERR_STATUS;
         }
-        
+
         i++;
     }   
 
