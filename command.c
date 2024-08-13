@@ -29,13 +29,15 @@ const int rows = 4, width = 84;
 
 // Print the directory contents
 int recDir(char *path) {
-    if (!path) 
+    if (path == NULL) { 
         return ERR_STATUS;
-
+    }
+        
     DIR *dir = opendir(path);
-    if (!dir)
+    if (dir == NULL) {
         return ERR_STATUS;
-
+    }
+        
     struct dirent *entry;
 
     // Print the directory name
@@ -43,7 +45,7 @@ int recDir(char *path) {
 
     size_t buf_size = 32;
     char **files = (char **)malloc(buf_size * sizeof(char *)); // Allocate space for file names
-    if (!files) {
+    if (files == NULL) {
         fprintf(stderr, RED "Failed to allocate memory!\n" reset "recDir()\n");
         closedir(dir);
         return ERR_STATUS;
@@ -59,11 +61,13 @@ int recDir(char *path) {
             if (j >= buf_size) {
                 buf_size *= 2;
                 char **temp = (char **)realloc(files, buf_size * sizeof(char *));
-                if (!temp) {
+                if (temp == NULL) {
                     fprintf(stderr, RED "Failed to reallocate memory\n" reset "recDir()\n");
                     // Free previously allocated memory
-                    for (size_t k = 0; k < j; k++)
+                    for (size_t k = 0; k < j; k++) {
                         free(files[k]);
+                    }
+                    
                     free(files);
                     closedir(dir);
                     return ERR_STATUS;
@@ -72,16 +76,20 @@ int recDir(char *path) {
             }
 
             files[j] = strdup(entry->d_name);
-            if (files[j]) {
+            if (files[j] != NULL) {
                 size_t len = strlen(files[j]);
-                if (len > max_len) 
+                if (len > max_len) { 
                     max_len = len;
+                }
+                
                 j++;
             } else {
                 fprintf(stderr, RED "Failed to duplicate string\n" reset "recDir()\n");
                 // Free allocated memory before returning
-                for (size_t k = 0; k < j; k++)
+                for (size_t k = 0; k < j; k++) {
                     free(files[k]);
+                }
+                
                 free(files);
                 closedir(dir);
                 return ERR_STATUS;
@@ -93,14 +101,17 @@ int recDir(char *path) {
     int separation = max_len + 4;
     for (size_t k = 0; k < j; k++) {
         printf(GREEN "%-*s" reset, (int)(max_len + separation), files[k]);
-        if ((k + 1) % 4 == 0)
+        if ((k + 1) % 4 == 0) {
             printf("\n");
+        }
     }
     printf("\n");
 
     // Cleanup
-    for (size_t k = 0; k < j; k++)
+    for (size_t k = 0; k < j; k++) {
         free(files[k]);
+    }
+    
     free(files);
     closedir(dir);
 
@@ -110,7 +121,7 @@ int recDir(char *path) {
 // print the current working directory
 int pwd(char **args) {
     // no arguments are required for this command
-    if (args[1]) {
+    if (args[1] != NULL) {
         fprintf(stderr, 
                 RED "Too many arguments\n" reset "pwq()\n");
         
@@ -119,7 +130,7 @@ int pwd(char **args) {
 
     // allocate memory for the path string
     char *path = (char *)malloc((PATH_MAX + 1) * sizeof(char));
-    if (!path) {
+    if (path == NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory\n" reset "pwd()\n");
         
@@ -128,7 +139,7 @@ int pwd(char **args) {
 
     // get the current working directory path
     path = getcwd(path, PATH_MAX + 1);
-    if (!path) {
+    if (path == NULL) {
         fprintf(stderr, 
                 RED "Failed to get current working directory\n" reset "pwd()\n");
         
@@ -144,7 +155,7 @@ int pwd(char **args) {
 // List the directory contents
 int ls(char **args) {
     DIR *dir = opendir("."); // Open the current directory
-    if (!dir) {
+    if (dir == NULL) {
         fprintf(stderr,
                 RED "Error opening current directory\n" reset);
         return ERR_STATUS;
@@ -152,13 +163,14 @@ int ls(char **args) {
 
     char cwd[PATH_MAX];
     // If no arguments are provided, list the current directory
-    if (!args[1]) {
+    if (args[1] == NULL) {
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
             fprintf(stderr, 
                     RED "Error getting current working directory\n" reset);
             closedir(dir);
             return ERR_STATUS;
         }
+        
         if (recDir(cwd) != 0) {
             closedir(dir);
             return ERR_STATUS;
@@ -168,12 +180,13 @@ int ls(char **args) {
         size_t len = strlen(args[1]);
         if (len > 0 && args[1][len - 1] != '/') {
             char *new_path = (char *)realloc(args[1], len + 2);
-            if (!new_path) {
+            if (new_path == NULL) {
                 fprintf(stderr, 
                         RED "Failed to allocate memory\n" reset "ls()\n");
                 closedir(dir);
                 return ERR_STATUS;
             }
+            
             args[1] = new_path;
             strcat(args[1], "/");
         }
@@ -202,9 +215,10 @@ int echo(char **args) {
     }
     
     // print provided arguments
-    while (args[i] != NULL) 
+    while (args[i] != NULL) {
         printf("%s ", args[i++]);
-
+    }
+    
     printf("\n");
 
     return (i > 1) ? SUC_STATUS : ERR_STATUS;
@@ -277,11 +291,10 @@ void mv_usage() {
 // rename a file
 int mv(char **args) {
     // at least two arguments are required
-    if (!args[1] || !args[2]) {
+    if (args[1] == NULL || args[2] == NULL) {
         mv_usage();
         return NOTSUP_STATUS;
-    } 
-    else 
+    } else { 
         // try renaming the file through a system call
         if (rename(args[1], args[2]) != 0) {
             fprintf(stderr, 
@@ -289,6 +302,7 @@ int mv(char **args) {
             
             return NOTSUP_STATUS;
         }
+    }
     
     return SUC_STATUS;
 }
@@ -632,7 +646,7 @@ int clang(char **args) {
     } 
 
     char *envPath = getenv("PATH");
-    if (!envPath) {
+    if (envPath == NULL) {
         fprintf(stderr, 
                 RED "Failed to retrieve environment 'PATH' variable: %s\n" reset, strerror(errno));
         
@@ -642,17 +656,17 @@ int clang(char **args) {
 
     const char delimiter = ':';
 
-    char       searchPath[PATH_MAX];    
+    char searchPath[PATH_MAX];    
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
 
     char *dir = strtok(searchPath, &delimiter);
     
-    while (dir) {
+    while (dir != NULL) {
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, clangCmd);
 
-        if (access(fullPath, X_OK)) {
+        if (access(fullPath, X_OK) == 0) {
             pid_t pid = fork();
 
             if (pid == 0) {
@@ -701,13 +715,14 @@ int comake(char **args) {
     char *objectFile   = strdup(filename); // copy the filename for the object file
     char *dot_position = strrchr(objectFile, '.'); // remove the original file ext
 
-    if (dot_position) 
+    if (dot_position != NULL) {
         *dot_position = '\0';
-        
+    }
+    
     strcat(objectFile, ".o"); // add the '.o' add the end
 
     char *envPath = getenv("PATH");
-    if (!envPath) {
+    if (envPath == NULL) {
         fprintf(stderr, 
                 RED "Failed to retrieve environment 'PATH' variable: %s\n" reset, strerror(errno));
         
@@ -718,8 +733,8 @@ int comake(char **args) {
 
     // construct the search path for 'clang'
     const char *compCmd  = "clang";
-    const char delimiter = ':';
-    char       searchPath[PATH_MAX];
+    const char  delimiter = ':';
+    char        searchPath[PATH_MAX];
     
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
@@ -727,11 +742,11 @@ int comake(char **args) {
     // execute the command via syscall
     char *dir = strtok(searchPath, &delimiter);
     
-    while (dir) {
+    while (dir != NULL) {
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, compCmd);
 
-        if (access(fullPath, X_OK)) {
+        if (access(fullPath, X_OK) == 0) {
             pid_t pid = fork();
 
             if (pid == 0) {
@@ -773,7 +788,7 @@ int build(char **args) {
 
     // get the current working directory
     char cwd[PATH_MAX];
-    if (!getcwd(cwd, sizeof(cwd))) {
+    if (getcwd(cwd, sizeof(cwd)) == 0) {
         perror("getcwd() error");
         return ERR_STATUS;
     }
@@ -792,7 +807,7 @@ int build(char **args) {
 
     // get the object files into a seperate array
     char **files = (char **)malloc(MAX_FILES * sizeof(char *));
-    if (!files) {
+    if (files == NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory\n" reset);
         
@@ -803,13 +818,13 @@ int build(char **args) {
         files[j] = strdup(args[i]); // copy the filename
 
         // cleanup in case of memory limits
-        if (!files[j]) {
+        if (files[j] == NULL) {
             fprintf(stderr, 
                     RED "Failed to allocate memory : strdup()\n" reset);
             
-            for (int k = 0; k < j; k++)
+            for (int k = 0; k < j; k++) {
                 free(files[k]);
- 
+            }
             free(files);
  
             return ERR_STATUS;
@@ -821,12 +836,13 @@ int build(char **args) {
     // isolate the executable file
     char *exec_file = strdup(args[size - 1]);
     
-    if (!exec_file) {
+    if (exec_file == NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory : strdup()\n" reset);
         
-        for (int k = 0; k < j; k++) 
+        for (int k = 0; k < j; k++) {
             free(files[k]);
+        }
  
         free(files);
  
@@ -835,13 +851,14 @@ int build(char **args) {
 
     // get the environment path variable 
     char *envPath = getenv("PATH");
-    if (!envPath) {
+    if (envPath == NULL) {
         // cleanup
         fprintf(stderr, 
                 RED "Failed to get the environment path variable : build()\n" reset);
         
-        for (int k = 0; k < j; k++) 
+        for (int k = 0; k < j; k++) { 
             free(files[k]);
+        }
  
         free(files);
         free(exec_file);
@@ -855,12 +872,13 @@ int build(char **args) {
 
     // dynamic search path for clang
     char *searchPath = strdup(envPath);
-    if (searchPath) {
+    if (searchPath != NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory : strdup()\n" reset);
         
-        for (int k = 0; k < j; k++) 
+        for (int k = 0; k < j; k++) { 
             free(files[k]);
+        }
  
         free(files);
         free(exec_file);
