@@ -93,7 +93,7 @@ char **tok_line(char *line) {
     int buf_size  = 64;
     char **tokens = (char **)malloc(buf_size * sizeof(char *));
     
-    if (!tokens) {
+    if (tokens == NULL) {
         fprintf(stderr,     
                 RED "Memory allocation failed (tokenize line) : %s\n" reset, strerror(errno));
         
@@ -107,8 +107,9 @@ char **tok_line(char *line) {
 
     // loop goes until the end of input stream token by token
     while (token) {
-        if (token[0] == '#')  // ignore comments
+        if (token[0] == '#') { // ignore comments
             break;
+        }
         
         tokens[i++] = token; // insert token at the end of the array
 
@@ -117,7 +118,7 @@ char **tok_line(char *line) {
             buf_size += buf_size; // double the buffer size
             // realloc memory at the same region
             char *temp = (char *)realloc(tokens, buf_size * sizeof(char));
-            if (!temp) {
+            if (temp == NULL) {
                 fprintf(stderr, 
                         RED "Memory reallocation failed (read_stream)! : %s\n" reset, strerror(errno));
                 free(line);  
