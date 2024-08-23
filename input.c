@@ -13,7 +13,7 @@ char *read_line() {
     char *line = NULL;
     line       = (char *)malloc(BUFSIZ * sizeof(char) + 1);
     
-    if (!line) {
+    if (line == NULL) {
         fprintf(stderr, 
                 RED "Failed to allocate memory : %s\n" reset, strerror(errno));
         
@@ -36,7 +36,7 @@ char *read_line() {
     }
 
     // strip newline
-    if (line) {
+    if (line != NULL) {
         size_t len = strlen(line);
         
         if (len > 0 && line[len - 1] == '\n') 
