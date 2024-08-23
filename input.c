@@ -42,9 +42,11 @@ char *read_line() {
         if (len > 0 && line[len - 1] == '\n') {
             line[len - 1] = '\0';
         }
+
+        return line;
     }
 
-    return line; 
+    exit(EXIT_FAILURE);
 }
 
 // read commands from a file
