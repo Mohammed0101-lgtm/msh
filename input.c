@@ -21,7 +21,7 @@ char *read_line() {
     }
 
     // read the line input
-    if (!fgets(line, BUFSIZ, stdin)) {
+    if (fgets(line, BUFSIZ, stdin) == NULL) {
         // incase the stdin is saturated
         if (feof(stdin)) {
             free(line);
@@ -53,7 +53,7 @@ char *read_stream() {
     char *line      = (char *)malloc(buf_size * sizeof(char));
     int character;
     
-    if (!line) {
+    if (line == NULL) {
         fprintf(stderr,     
                 RED "Memory allocation failed!\n" reset);
         
@@ -106,7 +106,7 @@ char **tok_line(char *line) {
     token       = strtok(line, TOK_DELIM); // using strtok that returns token by delimiters
 
     // loop goes until the end of input stream token by token
-    while (token) {
+    while (token != NULL) {
         if (token[0] == '#') { // ignore comments
             break;
         }
