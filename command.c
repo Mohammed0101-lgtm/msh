@@ -422,7 +422,6 @@ int touch(char **args) {
     }
 
     fclose(new_file);
-
     return SUC_STATUS;
 }
 
@@ -669,7 +668,7 @@ int clang(char **args) {
 
     const char delimiter = ':';
 
-    char       searchPath[PATH_MAX];    
+    char searchPath[PATH_MAX];    
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
 
