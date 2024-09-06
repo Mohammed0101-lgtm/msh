@@ -1,8 +1,5 @@
 
 // This file containes the implemenetation of the supported shell commands
-#include "shell_inter.h"
-#include "command.h"
-#include "config.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -21,6 +18,10 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#include "shell_inter.h"
+#include "command.h"
+#include "config.h"
+
 #define _POSIX_SOURCE
 #define _XOPEN_SOURCE_EXTENDED 1
 
@@ -32,16 +33,13 @@ int recDir(char *path) {
     if (path == NULL) { 
         return ERR_STATUS;
     }
-
     // open the specified directory 
     DIR *dir = opendir(path);
     if (dir == NULL) {
         return ERR_STATUS;
     }
-
     // pointer for each entry in the directory
     struct dirent *entry; 
-
     // Print the directory name
     printf(BBLU "\t%s :\n" reset, path);
 
@@ -72,7 +70,7 @@ int recDir(char *path) {
                     for (size_t k = 0; k < j; k++) {
                         free(files[k]);
                     }
-
+                    
                     free(files);
                     closedir(dir);
                     return ERR_STATUS;
@@ -114,7 +112,6 @@ int recDir(char *path) {
     }
 
     printf("\n");
-
     // Cleanup
     for (size_t k = 0; k < j; k++) {
         free(files[k]);
@@ -153,7 +150,6 @@ int pwd(char **args) {
         
         return ERR_STATUS;
     }
-
     // print and free
     printf("%s\n", path);
     free(path);
@@ -201,7 +197,6 @@ int ls(char **args) {
             args[1] = new_path;
             strcat(args[1], "/");
         }
-
         // List the directory specified by the argument
         if (recDir(args[1]) != 0) {
             closedir(dir);
@@ -224,14 +219,12 @@ int echo(char **args) {
         
         return ERR_STATUS;
     }
-    
     // print provided arguments
     while (args[i] != NULL) {
         printf("%s ", args[i++]);
     }
 
     printf("\n");
-
     return (i > 1) ? SUC_STATUS : ERR_STATUS;
 }
 
@@ -246,8 +239,7 @@ int cd(char **args) {
     if (args[1] == NULL) {
         cd_usage();
         return ERR_STATUS;
-    } 
-    
+    }
     // if entered command is : cd .
     // then stay in the cwd
     if (strcmp(args[1], ".")) {
@@ -282,7 +274,6 @@ int rm(char **args) {
         rm_usage();
         return NOTSUP_STATUS;
     }
-
     // try to remove the file through a syscall
     if (remove(args[1]) != 0) {
         fprintf(stderr, 
@@ -304,8 +295,7 @@ int mv(char **args) {
     if (args[1] == NULL || args[2] == NULL) {
         mv_usage();
         return NOTSUP_STATUS;
-    } 
-    else 
+    } else { 
         // try renaming the file through a system call
         if (rename(args[1], args[2]) != 0) {
             fprintf(stderr, 
@@ -313,7 +303,7 @@ int mv(char **args) {
             
             return NOTSUP_STATUS;
         }
-    
+    }
     return SUC_STATUS;
 }
 
@@ -343,8 +333,7 @@ int shopen(char **args) {
     int i = 1;
     while (args[i] != NULL) {
         if (strlen(command) + strlen(args[i]) <= buf_size) {
-            strcat(command, args[i]);
-            
+            strcat(command, args[i]);     
             if (args[i + 1] != NULL) {
                 strcat(command, " "); 
             }
@@ -411,7 +400,6 @@ int touch(char **args) {
      
         return ERR_STATUS;
     }
-
     // create the file
     FILE *new_file = fopen(args[1], "w");
     if (new_file == NULL) {
@@ -441,7 +429,6 @@ int cmake(char **args) {
     if (dot_position != NULL) {
         *dot_position = '\0';
     }
-
     // get the environment path variable which stores 
     // the path to the clang file which is used to compile
     // the program, if it doesn't find it then the user is 
@@ -459,16 +446,13 @@ int cmake(char **args) {
 
     const char *compCmd  = "clang"; // for the compilt command
     const char delimiter = ':'; // the seperator of the environment path variable
-    
     // the path to clang
     char searchPath[PATH_MAX];
     // construct the full search path
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[strlen(searchPath) - 1] = '\0'; // enforce '\0'
-
     // tokenize the search path to iterate through it
     char *dir = strtok(searchPath, &delimiter);
-    
     // go through earch dir in the path till finding clang
     while (dir != NULL) {
         // the expected path if 'clang' exists
@@ -508,7 +492,6 @@ int cmake(char **args) {
                 } while (!WIFEXITED(status) && !WIFSIGNALED(status));
             }
         }
-
         // go the next directory if 'clang' is not in tge current one
         dir = strtok(NULL, &delimiter);
     }
@@ -528,7 +511,6 @@ int run(char **args) {
         
         return ERR_STATUS;
     }
-
     // if the argument an executable
     if (access(args[1], X_OK) == 0) {
         // construct the executable command
@@ -540,7 +522,6 @@ int run(char **args) {
             
             return ERR_STATUS;
         }
-
         // adding the './' to the command
         // this discards the fact that you can in normal
         // shells execute a file that is not in the cwd
@@ -592,7 +573,6 @@ int createDirectory(char **args) {
     }
 
     struct stat st = {0};
-     
     // create dir
     if (stat(args[1], &st) == -1) {
         if (mkdir(args[1], 0777) != 0) {
@@ -600,7 +580,6 @@ int createDirectory(char **args) {
             return ERR_STATUS;
         }
     }
-
     // check if the dir making is successful
     struct stat path_stat;
     stat(args[1], &path_stat);
@@ -667,11 +646,9 @@ int clang(char **args) {
     }
 
     const char delimiter = ':';
-
     char searchPath[PATH_MAX];    
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
-
     char *dir = strtok(searchPath, &delimiter);
     
     while (dir) {
@@ -711,7 +688,6 @@ int clang(char **args) {
     
     return SUC_STATUS;
 }
-
 // make an object file instead of an executable
 int comake(char **args) {
     // clang is the default and object
@@ -732,7 +708,6 @@ int comake(char **args) {
     }
 
     strcat(objectFile, ".o"); // add the '.o' add the end
-
     char *envPath = getenv("PATH");
     if (envPath == NULL) {
         fprintf(stderr, 
@@ -742,7 +717,6 @@ int comake(char **args) {
         free(objectFile);
         return ERR_STATUS;
     }
-
     // construct the search path for 'clang'
     const char *compCmd  = "clang";
     const char delimiter = ':';
@@ -750,7 +724,6 @@ int comake(char **args) {
     
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
-
     // execute the command via syscall
     char *dir = strtok(searchPath, &delimiter);
     
@@ -782,7 +755,6 @@ int comake(char **args) {
 
         dir = strtok(NULL, &delimiter);
     }
-
     // cleanup
     free(filename);
     free(objectFile);
@@ -797,26 +769,23 @@ int build(char **args) {
     
     int i = 1;
     int j = 0;
-
     // get the current working directory
     char cwd[PATH_MAX];
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         perror("getcwd() error");
         return ERR_STATUS;
     }
-
     // get the number of arguments provided
     int size = 0;
     while (args[size++]) 
         ;
-
+    
     // too few arguments
     if (size < 2) {
         fprintf(stderr, 
                 RED "Not enough arguments provided\n" reset);
         return ERR_STATUS;
     }
-
     // get the object files into a seperate array
     char **files = (char **)malloc(MAX_FILES * sizeof(char *));
     if (files == NULL) {
@@ -828,7 +797,6 @@ int build(char **args) {
 
     for (i = 1; i < size - 1 && j < MAX_FILES; i++, j++) {
         files[j] = strdup(args[i]); // copy the filename
-
         // cleanup in case of memory limits
         if (files[j] == NULL) {
             fprintf(stderr, 
@@ -845,7 +813,6 @@ int build(char **args) {
     }
 
     files[j] = NULL;  // Null-terminate the files array
-
     // isolate the executable file
     char *exec_file = strdup(args[size - 1]);
     
@@ -861,7 +828,6 @@ int build(char **args) {
  
         return ERR_STATUS;
     }
-
     // get the environment path variable 
     char *envPath = getenv("PATH");
     if (envPath == NULL) {
@@ -878,11 +844,8 @@ int build(char **args) {
  
         return ERR_STATUS;
     }
-
-
     // path delimiter
     const char delimiter = ':';
-
     // dynamic search path for clang
     char *searchPath = strdup(envPath);
     if (searchPath == NULL) {
@@ -898,7 +861,6 @@ int build(char **args) {
  
         return ERR_STATUS;
     }
-
     // tokenize path for the search
     char *dir = strtok(searchPath, &delimiter);
     bool found = 0; // keep track of the state
@@ -949,7 +911,6 @@ int build(char **args) {
         
         dir = strtok(NULL, &delimiter);
     }
-
     // cleanup
     for (int k = 0; k < j; k++) {
         free(files[k]);
@@ -976,7 +937,6 @@ int print_head(char *filename, int size) {
 
         return ERR_STATUS;
     }  
-
     // define current variables
     const int max_lines = 10;
     const int MAX_WIDTH = 256;
@@ -989,12 +949,10 @@ int print_head(char *filename, int size) {
         
         return ERR_STATUS;
     }
-
     // get the file_size
     fseek(fp, 0, SEEK_END);
     size_t file_size = ftell(fp);
     rewind(fp);
-
     // if the file has fewer lines then ten
     if (file_size > buf_siz) {
         if (fread(buffer, 1, buf_siz, fp) != buf_siz) {
@@ -1044,7 +1002,6 @@ int print_head(char *filename, int size) {
     
     printf("%s", buffer);
     free(buffer);
-    
     return SUC_STATUS;
 }
 
@@ -1058,20 +1015,13 @@ int head(char **args) {
     } else if (args[2] == NULL) {
         return print_head(args[1], 0);
     }
-
-    // if there is more then one
-    // file is provided in command
+    // if there is more then one file is provided in command
     int i = 1;
-    while (args[i] != NULL) {
+    while (args[i++] != NULL) {
         if (print_head(args[i], 1) != SUC_STATUS) {
             return ERR_STATUS;
         }
-
-        i++;
     }   
-
+    
     return SUC_STATUS;
 }
-
-
-
