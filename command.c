@@ -1,23 +1,29 @@
 //
 // This file containes the implemenetation of the supported shell commands
+<<<<<<< HEAD
 //
+=======
+#include "command.h"
+#include "config.h"
+#include "shell_inter.h"
+>>>>>>> 237f957 (stuff)
 
 #include <assert.h>
 #include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <signal.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <limits.h>
-#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <stdbool.h>
 #include <sys/wait.h>
-#include <fcntl.h>
-#include <signal.h>
+#include <unistd.h>
 
 #include "shell_inter.h"
 #include "command.h"
@@ -26,35 +32,47 @@
 #define _POSIX_SOURCE
 #define _XOPEN_SOURCE_EXTENDED 1
 
-const int MAX_FILES       = 128;
-const int rows = 4, width = 84;
+const int MAX_FILES = 128;
+const int rows      = 4;
+const int width     = 84;
 
 // Print the directory contents
-int recDir(char *path) {
-    if (path == NULL) { 
+int recDir(char* path) {
+    if (path == NULL) {
         return ERR_STATUS;
     }
+<<<<<<< HEAD
     // open the specified directory 
     DIR *dir = opendir(path);
+=======
+
+    // open the specified directory
+    DIR* dir = opendir(path);
+>>>>>>> 237f957 (stuff)
     if (dir == NULL) {
         return ERR_STATUS;
     }
     // pointer for each entry in the directory
+<<<<<<< HEAD
     struct dirent *entry; 
+=======
+    struct dirent* entry;
+
+>>>>>>> 237f957 (stuff)
     // Print the directory name
     printf(BBLU "\t%s :\n" reset, path);
 
-    size_t buf_size = 32; // initial buffer for the files
+    size_t buf_size = 32;                                       // initial buffer for the files
 
-    char **files = (char **)malloc(buf_size * sizeof(char *)); // Allocate space for file names
+    char** files    = (char**)malloc(buf_size * sizeof(char*)); // Allocate space for file names
     if (files == NULL) {
         fprintf(stderr, RED "Failed to allocate memory!\n" reset "recDir()\n");
         closedir(dir);
         return ERR_STATUS;
     }
 
-    size_t j = 0; 
-    size_t max_len = 0; 
+    size_t j       = 0;
+    size_t max_len = 0;
 
     // Iterate through the directory
     while ((entry = readdir(dir))) {
@@ -64,7 +82,7 @@ int recDir(char *path) {
             if (j >= buf_size) {
                 buf_size *= 2;
 
-                char **temp = (char **)realloc(files, buf_size * sizeof(char *));
+                char** temp = (char**)realloc(files, buf_size * sizeof(char*));
                 if (temp == NULL) {
                     fprintf(stderr, RED "Failed to reallocate memory\n" reset "recDir()\n");
                     // Free previously allocated memory
@@ -83,7 +101,7 @@ int recDir(char *path) {
             files[j] = strdup(entry->d_name);
             if (files[j]) {
                 size_t len = strlen(files[j]);
-                if (len > max_len) { 
+                if (len > max_len) {
                     max_len = len;
                 }
 
@@ -106,7 +124,7 @@ int recDir(char *path) {
     int separation = max_len + 4;
     for (size_t k = 0; k < j; k++) {
         printf(GREEN "%-*s" reset, (int)(max_len + separation), files[k]);
-        
+
         if ((k + 1) % 4 == 0) {
             printf("\n");
         }
@@ -125,30 +143,27 @@ int recDir(char *path) {
 }
 
 // print the current working directory
-int pwd(char **args) {
+int pwd(char** args) {
     // no arguments are required for this command
     if (args[1] != NULL) {
-        fprintf(stderr, 
-                RED "Too many arguments\n" reset "pwq()\n");
-        
+        fprintf(stderr, RED "Too many arguments\n" reset "pwq()\n");
+
         return ERR_STATUS;
-    } 
+    }
 
     // allocate memory for the path string
-    char *path = (char *)malloc((PATH_MAX + 1) * sizeof(char));
+    char* path = (char*)malloc((PATH_MAX + 1) * sizeof(char));
     if (path == NULL) {
-        fprintf(stderr, 
-                RED "Failed to allocate memory\n" reset "pwd()\n");
-        
+        fprintf(stderr, RED "Failed to allocate memory\n" reset "pwd()\n");
+
         return ERR_STATUS;
     }
 
     // get the current working directory path
     path = getcwd(path, PATH_MAX + 1);
     if (path == NULL) {
-        fprintf(stderr, 
-                RED "Failed to get current working directory\n" reset "pwd()\n");
-        
+        fprintf(stderr, RED "Failed to get current working directory\n" reset "pwd()\n");
+
         return ERR_STATUS;
     }
     // print and free
@@ -158,12 +173,11 @@ int pwd(char **args) {
 }
 
 // List the directory contents
-int ls(char **args) {
-    DIR *dir = opendir("."); // Open the current directory
+int ls(char** args) {
+    DIR* dir = opendir("."); // Open the current directory
     if (dir == NULL) {
-        fprintf(stderr,
-                RED "Error opening current directory\n" reset);
-        
+        fprintf(stderr, RED "Error opening current directory\n" reset);
+
         return ERR_STATUS;
     }
 
@@ -171,13 +185,12 @@ int ls(char **args) {
     // If no arguments are provided, list the current directory
     if (args[1] == NULL) {
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
-            fprintf(stderr, 
-                    RED "Error getting current working directory\n" reset);
-        
+            fprintf(stderr, RED "Error getting current working directory\n" reset);
+
             closedir(dir);
             return ERR_STATUS;
         }
-        
+
         if (recDir(cwd) != 0) {
             closedir(dir);
             return ERR_STATUS;
@@ -186,15 +199,14 @@ int ls(char **args) {
         // Check if the provided path needs a trailing slash
         size_t len = strlen(args[1]);
         if (len > 0 && args[1][len - 1] != '/') {
-            char *new_path = (char *)realloc(args[1], len + 2);
+            char* new_path = (char*)realloc(args[1], len + 2);
             if (new_path == NULL) {
-                fprintf(stderr, 
-                        RED "Failed to allocate memory\n" reset "ls()\n");
-        
+                fprintf(stderr, RED "Failed to allocate memory\n" reset "ls()\n");
+
                 closedir(dir);
                 return ERR_STATUS;
             }
-        
+
             args[1] = new_path;
             strcat(args[1], "/");
         }
@@ -211,15 +223,18 @@ int ls(char **args) {
 
 // this function does not have printing to a file
 // functionality , you can add it if you want
-int echo(char **args) {
+int echo(char** args) {
     int i = 1;
-    // provide a string to echo it 
+    // provide a string to echo it
     if (args[1] == NULL) {
-        fprintf(stderr, 
-                YEL "Usage : echo..[string]..[string]..\n" reset);
-        
+        fprintf(stderr, YEL "Usage : echo..[string]..[string]..\n" reset);
+
         return ERR_STATUS;
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 237f957 (stuff)
     // print provided arguments
     while (args[i] != NULL) {
         printf("%s ", args[i++]);
@@ -234,18 +249,22 @@ void cd_usage() {
     fprintf(stderr, YEL "cd .. => go to parent dir\n" reset);
 }
 
-// change the current working directory 
-int cd(char **args) {
-    // need to provide a directoy to change to 
+// change the current working directory
+int cd(char** args) {
+    // need to provide a directoy to change to
     if (args[1] == NULL) {
         cd_usage();
         return ERR_STATUS;
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 237f957 (stuff)
     // if entered command is : cd .
     // then stay in the cwd
     if (strcmp(args[1], ".")) {
         char cwd[1024];
-      
+
         if (getcwd(cwd, sizeof(cwd)) != NULL) {
             printf("Current directory: %s\n", cwd);
             return SUC_STATUS;
@@ -255,21 +274,19 @@ int cd(char **args) {
         }
     } else if (strcmp(args[1], "..") == 0 && chdir("..") != 0) {
         perror("cd"); // if changing to the parent directory fails
-        return ERR_STATUS; 
+        return ERR_STATUS;
     } else if (chdir(args[1]) != 0) {
         perror("cd");
         return ERR_STATUS;
-    } 
+    }
 
     return SUC_STATUS;
 }
 
-void rm_usage() {
-    fprintf(stderr, YEL "rm usage : rm *[file]\n" reset);
-}
+void rm_usage() { fprintf(stderr, YEL "rm usage : rm *[file]\n" reset); }
 
 // remove a given file
-int rm(char **args) {
+int rm(char** args) {
     // a file path is required
     if (args[1] == NULL) {
         rm_usage();
@@ -277,54 +294,61 @@ int rm(char **args) {
     }
     // try to remove the file through a syscall
     if (remove(args[1]) != 0) {
-        fprintf(stderr, 
-                RED "failed to remove file : %s\n"reset, args[1]);
-        
+        fprintf(stderr, RED "failed to remove file : %s\n" reset, args[1]);
+
         return NOTSUP_STATUS;
-    } 
-    
+    }
+
     return SUC_STATUS;
 }
 
 void mv_usage() {
-    fprintf(stderr, YEL "mv usage : mv *[filename] -- ""newfilename""" reset);
+    fprintf(
+        stderr, YEL "mv usage : mv *[filename] -- "
+                    "newfilename"
+                    "" reset);
 }
 
 // rename a file
-int mv(char **args) {
+int mv(char** args) {
     // at least two arguments are required
     if (args[1] == NULL || args[2] == NULL) {
         mv_usage();
         return NOTSUP_STATUS;
+<<<<<<< HEAD
     } else { 
+=======
+    } else
+>>>>>>> 237f957 (stuff)
         // try renaming the file through a system call
         if (rename(args[1], args[2]) != 0) {
-            fprintf(stderr, 
-                    RED "Error renaming file : %s\n" reset, args[1]);
-            
+            fprintf(stderr, RED "Error renaming file : %s\n" reset, args[1]);
+
             return NOTSUP_STATUS;
         }
+<<<<<<< HEAD
     }
+=======
+
+>>>>>>> 237f957 (stuff)
     return SUC_STATUS;
 }
 
 
 // open a file
-int shopen(char **args) {
+int shopen(char** args) {
     if (args[1] == NULL) {
-        fprintf(stderr, 
-                RED "open: missing file path" reset);
-        
+        fprintf(stderr, RED "open: missing file path" reset);
+
         return NOTSUP_STATUS;
-    } 
+    }
 
     size_t buf_size = 64;
-    char *command   = (char *)malloc((buf_size + 1) * sizeof(char));
-    
+    char*  command  = (char*)malloc((buf_size + 1) * sizeof(char));
+
     if (command == NULL) {
-        fprintf(stderr, 
-                RED "Memory allocation failed\n" reset "open()\n");
-        
+        fprintf(stderr, RED "Memory allocation failed\n" reset "open()\n");
+
         return ERR_STATUS;
     }
 
@@ -334,18 +358,22 @@ int shopen(char **args) {
     int i = 1;
     while (args[i] != NULL) {
         if (strlen(command) + strlen(args[i]) <= buf_size) {
+<<<<<<< HEAD
             strcat(command, args[i]);     
+=======
+            strcat(command, args[i]);
+
+>>>>>>> 237f957 (stuff)
             if (args[i + 1] != NULL) {
-                strcat(command, " "); 
+                strcat(command, " ");
             }
         } else {
             buf_size += buf_size;
-            command   = (char*)realloc(command, (buf_size + 1) * sizeof(char));
-            
+            command = (char*)realloc(command, (buf_size + 1) * sizeof(char));
+
             if (command == NULL) {
-                fprintf(stderr, 
-                        RED "Memory reallocation failed!\n" reset "open()\n");
-                
+                fprintf(stderr, RED "Memory reallocation failed!\n" reset "open()\n");
+
                 free(command);
                 return ERR_STATUS;
             }
@@ -378,8 +406,7 @@ int shopen(char **args) {
             _exit(EXIT_FAILURE);
         }
     } else if (pid == -1) {
-        fprintf(stderr, 
-                RED "Error in creating child process: %s\n" reset, strerror(errno));
+        fprintf(stderr, RED "Error in creating child process: %s\n" reset, strerror(errno));
         return ERR_STATUS;
     } else {
         int status;
@@ -391,22 +418,20 @@ int shopen(char **args) {
     return SUC_STATUS;
 }
 
-// create a new empty file 
-int touch(char **args) {
-    // no spaces all lower case should 
+// create a new empty file
+int touch(char** args) {
+    // no spaces all lower case should
     // be the converntion of filenames
     if (args[1] == NULL) {
-        fprintf(stderr, 
-                RED "touch: missing file path\n" reset);
-     
+        fprintf(stderr, RED "touch: missing file path\n" reset);
+
         return ERR_STATUS;
     }
     // create the file
-    FILE *new_file = fopen(args[1], "w");
+    FILE* new_file = fopen(args[1], "w");
     if (new_file == NULL) {
-        fprintf(stderr, 
-                RED "Failed to create file: %s\n" reset, args[1]);
-        
+        fprintf(stderr, RED "Failed to create file: %s\n" reset, args[1]);
+
         return ERR_STATUS;
     }
 
@@ -415,45 +440,62 @@ int touch(char **args) {
 }
 
 // compile a c program
-int cmake(char **args) {
+int cmake(char** args) {
     if (args[1] == NULL) {
-        fprintf(stderr, 
-                RED "cmake: missing filepath\n" reset);
-        
+        fprintf(stderr, RED "cmake: missing filepath\n" reset);
+
         return ERR_STATUS;
     }
 
-    char *filename       = strdup(args[1]);
-    char *executableFile = strdup(filename);
-    char *dot_position   = strrchr(executableFile, '.');// get the '.' position to remove the extension
+    char* filename       = strdup(args[1]);
+    char* executableFile = strdup(filename);
+    char* dot_position =
+        strrchr(executableFile, '.'); // get the '.' position to remove the extension
 
     if (dot_position != NULL) {
         *dot_position = '\0';
     }
+<<<<<<< HEAD
     // get the environment path variable which stores 
+=======
+
+    // get the environment path variable which stores
+>>>>>>> 237f957 (stuff)
     // the path to the clang file which is used to compile
-    // the program, if it doesn't find it then the user is 
+    // the program, if it doesn't find it then the user is
     // forced to install it
-    char *envPath = getenv("PATH"); 
+    char* envPath = getenv("PATH");
     if (envPath == NULL) {
-        fprintf(stderr, 
-                RED "Failed to retrieve environment 'PATH' variable: %s\n" reset, strerror(errno));
-        
+        fprintf(
+            stderr, RED "Failed to retrieve environment 'PATH' variable: %s\n" reset,
+            strerror(errno));
+
         free(filename);
         free(executableFile);
-        
+
         return ERR_STATUS;
     }
 
+<<<<<<< HEAD
     const char *compCmd  = "clang"; // for the compilt command
     const char delimiter = ':'; // the seperator of the environment path variable
+=======
+    const char* compCmd   = "clang"; // for the compilt command
+    const char  delimiter = ':';     // the seperator of the environment path variable
+
+>>>>>>> 237f957 (stuff)
     // the path to clang
     char searchPath[PATH_MAX];
     // construct the full search path
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[strlen(searchPath) - 1] = '\0'; // enforce '\0'
     // tokenize the search path to iterate through it
+<<<<<<< HEAD
     char *dir = strtok(searchPath, &delimiter);
+=======
+    char* dir = strtok(searchPath, &delimiter);
+
+>>>>>>> 237f957 (stuff)
     // go through earch dir in the path till finding clang
     while (dir != NULL) {
         // the expected path if 'clang' exists
@@ -461,29 +503,27 @@ int cmake(char **args) {
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, compCmd);
 
         // fork the current process to execute clang
-        // and then maintain the current process in 
+        // and then maintain the current process in
         // case of an error in the compilation time
         if (access(fullPath, X_OK) == 0) {
             pid_t pid = fork();
 
             if (pid == 0) {
                 // execute clang with full path
-                execl(fullPath, compCmd, filename, "-o", executableFile, (char *)NULL);
-                fprintf(stderr, 
-                        RED "Error in execl: %s\n" reset, strerror(errno));
-              
+                execl(fullPath, compCmd, filename, "-o", executableFile, (char*)NULL);
+                fprintf(stderr, RED "Error in execl: %s\n" reset, strerror(errno));
+
                 free(filename);
                 free(executableFile);
-                
+
                 _exit(EXIT_FAILURE);
             } else if (pid == -1) {
                 // if the forking fails
-                fprintf(stderr, 
-                        RED "Error in creating child process: %s\n" reset, strerror(errno));
-                
+                fprintf(stderr, RED "Error in creating child process: %s\n" reset, strerror(errno));
+
                 free(filename);
                 free(executableFile);
-                
+
                 return ERR_STATUS;
             } else {
                 // wait till the child process exits
@@ -496,31 +536,29 @@ int cmake(char **args) {
         // go the next directory if 'clang' is not in tge current one
         dir = strtok(NULL, &delimiter);
     }
-    
+
     free(filename);
     free(executableFile);
-    
+
     return SUC_STATUS;
 }
 
 
-// running an executable file 
-int run(char **args) {
+// running an executable file
+int run(char** args) {
     if (args[1] == NULL) {
-        fprintf(stderr, 
-                RED "run: missing executable file path\n" reset);
-        
+        fprintf(stderr, RED "run: missing executable file path\n" reset);
+
         return ERR_STATUS;
     }
     // if the argument an executable
     if (access(args[1], X_OK) == 0) {
         // construct the executable command
         // for the system call - exporting
-        char *exec_cmd = (char *)malloc(MAXNAMLEN + 3);
+        char* exec_cmd = (char*)malloc(MAXNAMLEN + 3);
         if (exec_cmd == NULL) {
-            fprintf(stderr, 
-                    RED "Memory allocation failed\n" reset);
-            
+            fprintf(stderr, RED "Memory allocation failed\n" reset);
+
             return ERR_STATUS;
         }
         // adding the './' to the command
@@ -532,16 +570,14 @@ int run(char **args) {
 
         if (pid == 0) {
             // do the syscall
-            execl(exec_cmd, args[1], (char *)NULL);
-            fprintf(stderr, 
-                    RED "Error in execl: %s\n" reset, strerror(errno));
-            
+            execl(exec_cmd, args[1], (char*)NULL);
+            fprintf(stderr, RED "Error in execl: %s\n" reset, strerror(errno));
+
             free(exec_cmd);
             _exit(EXIT_FAILURE);
         } else if (pid == -1) {
-            fprintf(stderr, 
-                    RED "Error in creating child process: %s\n" reset, strerror(errno));
-            
+            fprintf(stderr, RED "Error in creating child process: %s\n" reset, strerror(errno));
+
             free(exec_cmd);
             return ERR_STATUS;
         } else {
@@ -554,9 +590,8 @@ int run(char **args) {
         free(exec_cmd);
     } else {
         // scream at the user hhhh
-        fprintf(stderr, 
-                RED "%s: file is not executable\n" reset, args[1]);
-        
+        fprintf(stderr, RED "%s: file is not executable\n" reset, args[1]);
+
         return ERR_STATUS;
     }
 
@@ -564,16 +599,19 @@ int run(char **args) {
 }
 
 // implementing mkdir
-int createDirectory(char **args) {
+int createDirectory(char** args) {
     // provide the dirname
     if (args[1] == NULL) {
-        fprintf(stderr, 
-                YEL "Usage: createDirectory <directory_name>\n" reset);
-        
+        fprintf(stderr, YEL "Usage: createDirectory <directory_name>\n" reset);
+
         return ERR_STATUS;
     }
 
     struct stat st = {0};
+<<<<<<< HEAD
+=======
+
+>>>>>>> 237f957 (stuff)
     // create dir
     if (stat(args[1], &st) == -1) {
         if (mkdir(args[1], 0777) != 0) {
@@ -586,72 +624,78 @@ int createDirectory(char **args) {
     stat(args[1], &path_stat);
 
     if (!S_ISDIR(path_stat.st_mode)) {
-        fprintf(stderr, 
-                RED "Failed to create directory\n" reset);
-        
+        fprintf(stderr, RED "Failed to create directory\n" reset);
+
         return ERR_STATUS;
     }
 
-    return SUC_STATUS; 
+    return SUC_STATUS;
 }
 
-// clang cmd in case 
-int clang(char **args) {
-    char *clangCmd = strdup(args[0]);
+// clang cmd in case
+int clang(char** args) {
+    char* clangCmd = strdup(args[0]);
     if (clangCmd == NULL) {
-        fprintf(stderr,     
-                RED "Failed to allocate memory : strdup()\n" reset);
-        
+        fprintf(stderr, RED "Failed to allocate memory : strdup()\n" reset);
+
         return ERR_STATUS;
     }
 
-    size_t size = 0; 
-    while (args[size++]) 
+    size_t size = 0;
+    while (args[size++])
         ;
-    
-    char *c_file = strdup(args[1]);
+
+    char* c_file = strdup(args[1]);
     if (c_file == NULL) {
-        fprintf(stderr, 
-                RED "Failed to allocate memory : strdup()\n" reset);
-        
+        fprintf(stderr, RED "Failed to allocate memory : strdup()\n" reset);
+
         free(clangCmd);
         return ERR_STATUS;
     }
 
-    char *exec_file = strdup(args[3]);
+    char* exec_file = strdup(args[3]);
     if (exec_file == NULL) {
-        fprintf(stderr, 
-                RED "Failed to allocate memory : strdup()\n" reset);
-        
+        fprintf(stderr, RED "Failed to allocate memory : strdup()\n" reset);
+
         free(clangCmd);
         free(c_file);
         return ERR_STATUS;
     }
 
     if (size < 4) {
-        fprintf(stderr, 
-                RED "clang: missing arguments\n" reset);
-        
+        fprintf(stderr, RED "clang: missing arguments\n" reset);
+
         free(clangCmd);
         free(c_file);
         return ERR_STATUS;
-    } 
+    }
 
-    char *envPath = getenv("PATH");
+    char* envPath = getenv("PATH");
     if (envPath == NULL) {
-        fprintf(stderr, 
-                RED "Failed to retrieve environment 'PATH' variable: %s\n" reset, strerror(errno));
-        
+        fprintf(
+            stderr, RED "Failed to retrieve environment 'PATH' variable: %s\n" reset,
+            strerror(errno));
+
         free(clangCmd);
         return ERR_STATUS;
     }
 
     const char delimiter = ':';
+<<<<<<< HEAD
     char searchPath[PATH_MAX];    
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
     char *dir = strtok(searchPath, &delimiter);
     
+=======
+
+    char       searchPath[PATH_MAX];
+    strncpy(searchPath, envPath, sizeof(searchPath));
+    searchPath[sizeof(searchPath) - 1] = '\0';
+
+    char* dir                          = strtok(searchPath, &delimiter);
+
+>>>>>>> 237f957 (stuff)
     while (dir) {
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, clangCmd);
@@ -660,16 +704,14 @@ int clang(char **args) {
             pid_t pid = fork();
 
             if (pid == 0) {
-                execl(fullPath, c_file, args[2], exec_file, (char *)NULL);
-                fprintf(stderr, 
-                        RED "Error in execl: %s\n" reset, strerror(errno));
-                
+                execl(fullPath, c_file, args[2], exec_file, (char*)NULL);
+                fprintf(stderr, RED "Error in execl: %s\n" reset, strerror(errno));
+
                 free(clangCmd);
                 _exit(EXIT_FAILURE);
             } else if (pid == -1) {
-                fprintf(stderr, 
-                        RED "Error in creating child process: %s\n" reset, strerror(errno));
-                
+                fprintf(stderr, RED "Error in creating child process: %s\n" reset, strerror(errno));
+
                 free(clangCmd);
                 return ERR_STATUS;
             } else {
@@ -686,48 +728,53 @@ int clang(char **args) {
     free(clangCmd);
     free(c_file);
     free(exec_file);
-    
+
     return SUC_STATUS;
 }
 // make an object file instead of an executable
-int comake(char **args) {
+int comake(char** args) {
     // clang is the default and object
     // files default to '.o' extention
     if (args[1] == NULL) {
-        fprintf(stderr, 
-                YEL "Usage: comake -<filename>-..[OPTION] : <flag>\n" reset);
-        
+        fprintf(stderr, YEL "Usage: comake -<filename>-..[OPTION] : <flag>\n" reset);
+
         return ERR_STATUS;
     }
 
-    char *filename     = strdup(args[1]); // copy the filename
-    char *objectFile   = strdup(filename); // copy the filename for the object file
-    char *dot_position = strrchr(objectFile, '.'); // remove the original file ext
+    char* filename     = strdup(args[1]);          // copy the filename
+    char* objectFile   = strdup(filename);         // copy the filename for the object file
+    char* dot_position = strrchr(objectFile, '.'); // remove the original file ext
 
-    if (dot_position == NULL) { 
+    if (dot_position == NULL) {
         *dot_position = '\0';
     }
 
     strcat(objectFile, ".o"); // add the '.o' add the end
+<<<<<<< HEAD
     char *envPath = getenv("PATH");
+=======
+
+    char* envPath = getenv("PATH");
+>>>>>>> 237f957 (stuff)
     if (envPath == NULL) {
-        fprintf(stderr, 
-                RED "Failed to retrieve environment 'PATH' variable: %s\n" reset, strerror(errno));
-        
+        fprintf(
+            stderr, RED "Failed to retrieve environment 'PATH' variable: %s\n" reset,
+            strerror(errno));
+
         free(filename);
         free(objectFile);
         return ERR_STATUS;
     }
     // construct the search path for 'clang'
-    const char *compCmd  = "clang";
-    const char delimiter = ':';
-    char       searchPath[PATH_MAX];
-    
+    const char* compCmd   = "clang";
+    const char  delimiter = ':';
+    char        searchPath[PATH_MAX];
+
     strncpy(searchPath, envPath, sizeof(searchPath));
     searchPath[sizeof(searchPath) - 1] = '\0';
     // execute the command via syscall
-    char *dir = strtok(searchPath, &delimiter);
-    
+    char* dir = strtok(searchPath, &delimiter);
+
     while (dir) {
         char fullPath[PATH_MAX];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", dir, compCmd);
@@ -736,15 +783,13 @@ int comake(char **args) {
             pid_t pid = fork();
 
             if (pid == 0) {
-                execl(fullPath, compCmd, "-c", filename, "-o", objectFile, (char *)NULL);
-                fprintf(stderr, 
-                        RED "Error in execl: %s\n" reset, strerror(errno));
-                
+                execl(fullPath, compCmd, "-c", filename, "-o", objectFile, (char*)NULL);
+                fprintf(stderr, RED "Error in execl: %s\n" reset, strerror(errno));
+
                 _exit(EXIT_FAILURE);
             } else if (pid == -1) {
-                fprintf(stderr, 
-                        RED "Error in creating child process: %s\n" reset, strerror(errno));
-                
+                fprintf(stderr, RED "Error in creating child process: %s\n" reset, strerror(errno));
+
                 return ERR_STATUS;
             } else {
                 int status;
@@ -759,17 +804,25 @@ int comake(char **args) {
     // cleanup
     free(filename);
     free(objectFile);
-    
+
     return SUC_STATUS;
 }
 
 // linking multiple object files
-int build(char **args) {
+int build(char** args) {
     // clang will be the default compiler throughout
+<<<<<<< HEAD
     char *compCmd = "clang";
     
     int i = 1;
     int j = 0;
+=======
+    char* compCmd = "clang";
+
+    int   i       = 1;
+    int   j       = 0;
+
+>>>>>>> 237f957 (stuff)
     // get the current working directory
     char cwd[PATH_MAX];
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
@@ -778,21 +831,19 @@ int build(char **args) {
     }
     // get the number of arguments provided
     int size = 0;
-    while (args[size++]) 
+    while (args[size++])
         ;
     
     // too few arguments
     if (size < 2) {
-        fprintf(stderr, 
-                RED "Not enough arguments provided\n" reset);
+        fprintf(stderr, RED "Not enough arguments provided\n" reset);
         return ERR_STATUS;
     }
     // get the object files into a seperate array
-    char **files = (char **)malloc(MAX_FILES * sizeof(char *));
+    char** files = (char**)malloc(MAX_FILES * sizeof(char*));
     if (files == NULL) {
-        fprintf(stderr, 
-                RED "Failed to allocate memory\n" reset);
-        
+        fprintf(stderr, RED "Failed to allocate memory\n" reset);
+
         return ERR_STATUS;
     }
 
@@ -800,71 +851,78 @@ int build(char **args) {
         files[j] = strdup(args[i]); // copy the filename
         // cleanup in case of memory limits
         if (files[j] == NULL) {
-            fprintf(stderr, 
-                    RED "Failed to allocate memory : strdup()\n" reset);
-            
+            fprintf(stderr, RED "Failed to allocate memory : strdup()\n" reset);
+
             for (int k = 0; k < j; k++) {
                 free(files[k]);
             }
 
             free(files);
- 
+
             return ERR_STATUS;
         }
     }
 
+<<<<<<< HEAD
     files[j] = NULL;  // Null-terminate the files array
+=======
+    files[j] = NULL; // Null-terminate the files array
+
+>>>>>>> 237f957 (stuff)
     // isolate the executable file
-    char *exec_file = strdup(args[size - 1]);
-    
+    char* exec_file = strdup(args[size - 1]);
+
     if (exec_file == NULL) {
-        fprintf(stderr, 
-                RED "Failed to allocate memory : strdup()\n" reset);
-        
+        fprintf(stderr, RED "Failed to allocate memory : strdup()\n" reset);
+
         for (int k = 0; k < j; k++) {
             free(files[k]);
         }
 
         free(files);
- 
+
         return ERR_STATUS;
     }
+<<<<<<< HEAD
     // get the environment path variable 
     char *envPath = getenv("PATH");
+=======
+
+    // get the environment path variable
+    char* envPath = getenv("PATH");
+>>>>>>> 237f957 (stuff)
     if (envPath == NULL) {
         // cleanup
-        fprintf(stderr, 
-                RED "Failed to get the environment path variable : build()\n" reset);
-        
+        fprintf(stderr, RED "Failed to get the environment path variable : build()\n" reset);
+
         for (int k = 0; k < j; k++) {
             free(files[k]);
         }
- 
+
         free(files);
         free(exec_file);
- 
+
         return ERR_STATUS;
     }
     // path delimiter
     const char delimiter = ':';
     // dynamic search path for clang
-    char *searchPath = strdup(envPath);
+    char* searchPath = strdup(envPath);
     if (searchPath == NULL) {
-        fprintf(stderr, 
-                RED "Failed to allocate memory : strdup()\n" reset);
-        
+        fprintf(stderr, RED "Failed to allocate memory : strdup()\n" reset);
+
         for (int k = 0; k < j; k++) {
             free(files[k]);
         }
- 
+
         free(files);
         free(exec_file);
- 
+
         return ERR_STATUS;
     }
     // tokenize path for the search
-    char *dir = strtok(searchPath, &delimiter);
-    bool found = 0; // keep track of the state
+    char* dir   = strtok(searchPath, &delimiter);
+    bool  found = 0; // keep track of the state
 
     while (dir && !found) {
 
@@ -876,47 +934,46 @@ int build(char **args) {
 
             if (pid == 0) {
                 // executing all args at once
-                char *execArgs[size + 1];
+                char* execArgs[size + 1];
                 execArgs[0] = compCmd;
- 
+
                 for (i = 0; i < j; i++) {
                     execArgs[i + 1] = files[i];
                 }
-        
+
                 execArgs[j + 1] = exec_file;
                 execArgs[j + 2] = NULL;
 
                 execv(fullPath, execArgs);
                 perror("execv() error");
- 
+
                 exit(ERR_STATUS);
             } else if (pid < 0) {
                 perror("fork() error");
                 break;
             } else {
                 int status;
- 
+
                 if (waitpid(pid, &status, 0) == -1) {
                     perror("waitpid() error");
                     break;
                 }
- 
+
                 if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                     found = true;
                 } else {
-                    fprintf(stderr, 
-                            RED "Compilation failed\n" reset);
-                } 
+                    fprintf(stderr, RED "Compilation failed\n" reset);
+                }
             }
         }
-        
+
         dir = strtok(NULL, &delimiter);
     }
     // cleanup
     for (int k = 0; k < j; k++) {
         free(files[k]);
     }
-        
+
     free(files);
     free(exec_file);
     free(searchPath);
@@ -929,25 +986,28 @@ int build(char **args) {
 }
 
 // helper function for the function just below it
-int print_head(char *filename, int size) {
+int print_head(char* filename, int size) {
     // open file in reading mode
-    FILE *fp = fopen(filename, "r");
+    FILE* fp = fopen(filename, "r");
     if (fp == NULL) {
-        fprintf(stderr, 
-                RED "file not found : %s\n" reset, filename);
+        fprintf(stderr, RED "file not found : %s\n" reset, filename);
 
         return ERR_STATUS;
+<<<<<<< HEAD
     }  
+=======
+    }
+
+>>>>>>> 237f957 (stuff)
     // define current variables
     const int max_lines = 10;
     const int MAX_WIDTH = 256;
-    size_t buf_siz      = max_lines * MAX_WIDTH * sizeof(char) + 1;
-    
-    char *buffer = (char*)malloc(buf_siz);
+    size_t    buf_siz   = max_lines * MAX_WIDTH * sizeof(char) + 1;
+
+    char*     buffer    = (char*)malloc(buf_siz);
     if (buffer == NULL) {
-        fprintf(stderr, 
-                RED "Failed to allocate memory\n" reset);
-        
+        fprintf(stderr, RED "Failed to allocate memory\n" reset);
+
         return ERR_STATUS;
     }
     // get the file_size
@@ -957,61 +1017,62 @@ int print_head(char *filename, int size) {
     // if the file has fewer lines then ten
     if (file_size > buf_siz) {
         if (fread(buffer, 1, buf_siz, fp) != buf_siz) {
-            fprintf(stderr, 
-                    RED "Error reading file\n" reset);
-            
+            fprintf(stderr, RED "Error reading file\n" reset);
+
             fclose(fp);
             free(buffer);
             return ERR_STATUS;
         }
-        
-        buffer[buf_siz] = '\0';    
+
+        buffer[buf_siz] = '\0';
     } else {
         if (fread(buffer, 1, file_size, fp) != file_size) {
-            fprintf(stderr, 
-                    RED "Error reading file : %s\n" reset, filename);
-           
+            fprintf(stderr, RED "Error reading file : %s\n" reset, filename);
+
             free(buffer);
             fclose(fp);
             return ERR_STATUS;
         }
-        
+
         buffer[file_size] = '\0';
     }
 
     fclose(fp);
 
-    int lineCounter = 0; 
-    int lastline = 0;
-    
+    int lineCounter = 0;
+    int lastline    = 0;
+
     for (size_t i = 0; i < buf_siz; i++) {
         if (buffer[i] == '\n') {
             lineCounter++;
         }
-        
+
         if (lineCounter == 10) {
             lastline = i;
             break;
         }
     }
-    
+
     buffer[lastline + 1] = '\0';
-    
+
     if (size != 0) {
         printf(GREEN "==> %s <==\n" reset, filename);
     }
-    
+
     printf("%s", buffer);
     free(buffer);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 237f957 (stuff)
     return SUC_STATUS;
 }
 
 // print the first ten lines of a readable file
-int head(char **args) {
+int head(char** args) {
     if (args[1] == NULL) {
-        fprintf(stderr, 
-                RED "head() : missing file path\n" reset);
-    
+        fprintf(stderr, RED "head() : missing file path\n" reset);
+
         return ERR_STATUS;
     } else if (args[2] == NULL) {
         return print_head(args[1], 0);
@@ -1022,7 +1083,144 @@ int head(char **args) {
         if (print_head(args[i], 1) != SUC_STATUS) {
             return ERR_STATUS;
         }
+<<<<<<< HEAD
     }   
     
     return SUC_STATUS;
 }
+=======
+
+        i++;
+    }
+
+    return SUC_STATUS;
+}
+
+
+// get the content of a text file
+char* read_file(FILE* _file) {
+    // the file should be already open
+    if (_file == NULL) {
+        return NULL;
+    }
+
+    // seek the end of the file to get it's size later
+    if (fseek(_file, 0, SEEK_END) != 0) {
+        return NULL;
+    }
+
+    // get the size of file
+    long f_size = ftell(_file);
+
+    // ftell returns -1L when failed
+    if (f_size == -1L) {
+        return NULL;
+    }
+
+    // reset to the beginning of the file
+    if (fseek(_file, 0, SEEK_SET) != 0) {
+        return NULL;
+    }
+
+    if (f_size < 0) {
+        return NULL;
+    }
+
+    // allocate memory for buffer, it is
+    // your resposability to free it later
+    char* buf = (char*)malloc((f_size + 1) * sizeof(char));
+    if (buf == NULL) {
+        fprintf(stderr, "Malloc failed\n");
+        return NULL;
+    }
+
+    // this reads the file to buffer, and
+    // returns the file size when success
+    size_t read_size = fread(buf, sizeof(char), (size_t)f_size, _file);
+    // if fread failed
+    if (read_size != (size_t)f_size) {
+        // free memory preamptively
+        free(buf);
+        // check failure reason
+        // useful when debugging
+        if (feof(_file)) {
+            fprintf(stderr, "Unexpected end of file\n");
+        } else if (ferror(_file)) {
+            fprintf(stderr, "fread failed\n");
+        }
+
+        return NULL;
+    }
+
+    buf[f_size] = '\0'; // nul terminate
+    return buf;
+}
+
+
+int grep(char** args) {
+    if (args[1] == NULL) {
+        fprintf(stderr, "Missing arguments\n");
+        return ERR_STATUS;
+    }
+
+    char* filename = args[2];
+    char* exp      = args[1];
+
+    FILE* fp       = fopen(filename, "r");
+    if (fp == NULL) {
+        fprintf(stderr, RED "Failed to allocate memory\n" reset);
+
+        return ERR_STATUS;
+    }
+
+    char* content = read_file(fp);
+    fclose(fp);
+
+    if (content == NULL) {
+        fprintf(stderr, YEL "Failed to read file\n" reset);
+
+        return ERR_STATUS;
+    }
+
+    char* pos = strstr(content, exp);
+
+    if (pos == NULL) {
+        fprintf(stderr, YEL "No match found!\n" reset);
+
+        free(content);
+        return SUC_STATUS;
+    }
+
+    const char* start = content;
+    const char* end;
+
+    while ((pos = strstr(start, exp)) != NULL) {
+        // Find the start of the line
+        const char* lineStart = start;
+        while (lineStart > content && *(lineStart - 1) != '\n') {
+            lineStart--;
+        }
+
+        // Find the end of the line
+        end = pos;
+        while (*end != '\0' && *end != '\n') {
+            end++;
+        }
+
+        // Print the line
+        printf("%.*s\n", (int)(end - lineStart), lineStart);
+
+        // Move start pointer to the character after the end of the current line
+        start = end;
+
+        // Skip the newline character if there is one
+        if (*start == '\n') {
+            start++;
+        }
+    }
+
+    free(content);
+
+    return SUC_STATUS;
+}
+>>>>>>> 237f957 (stuff)

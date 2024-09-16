@@ -9,14 +9,12 @@
 int main(void) {
     if (isatty(STDIN_FILENO)) {
         if (shell_inter() != 0) {
-            fprintf(stderr, 
-                    RED "Shell interrupted\n" reset);
+            fprintf(stderr, RED "Shell interrupted\n" reset);
             exit(EXIT_FAILURE);
         }
     } else {
         shell_non_inter();
     }
-    
+
     return 0;
 }
-
