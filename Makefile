@@ -1,6 +1,6 @@
 CC = clang
 CFLAGS = -Wall -Wextra -g
-TARGET = myshell
+TARGET = msh
 OBJECTS = main.o shell_inter.o exec.o input.o command.o  
 
 $(TARGET): $(OBJECTS)

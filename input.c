@@ -46,7 +46,7 @@ char* read_line() {
 
 // read commands from a file
 char* read_stream() {
-    int    i        = 0;
+    size_t i        = 0;
     size_t buf_size = 64;
     char*  line     = (char*)malloc(buf_size * sizeof(char));
     int    character;
