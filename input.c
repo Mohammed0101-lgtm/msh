@@ -10,13 +10,12 @@
 // for reading the command line input
 char* read_line() {
     // initialize the line input
-    char *line = NULL;
-    line       = (char *)malloc(BUFSIZ * sizeof(char) + 1);
-    
+    char* line = NULL;
+    line       = (char*)malloc(BUFSIZ * sizeof(char) + 1);
+
     if (!line) {
-        fprintf(stderr, 
-                RED "Failed to allocate memory : %s\n" reset, strerror(errno));
-        
+        fprintf(stderr, RED "Failed to allocate memory : %s\n" reset, strerror(errno));
+
         exit(EXIT_FAILURE);
     }
 
@@ -37,25 +36,24 @@ char* read_line() {
     // strip newline
     if (line != NULL) {
         size_t len = strlen(line);
-        
-        if (len > 0 && line[len - 1] == '\n') 
-            line[len - 1] = '\0';
-        }
 
-    return line; 
+        if (len > 0 && line[len - 1] == '\n')
+            line[len - 1] = '\0';
+    }
+
+    return line;
 }
 
 // read commands from a file
 char* read_stream() {
     int    i        = 0;
     size_t buf_size = 64;
-    char *line      = (char *)malloc(buf_size * sizeof(char));
-    int character;
-    
+    char*  line     = (char*)malloc(buf_size * sizeof(char));
+    int    character;
+
     if (!line) {
-        fprintf(stderr,     
-                RED "Memory allocation failed!\n" reset);
-        
+        fprintf(stderr, RED "Memory allocation failed!\n" reset);
+
         exit(EXIT_FAILURE);
     }
 
@@ -90,13 +88,13 @@ char* read_stream() {
 // tokenize the input stream by space seperators
 char** tok_line(char* line) {
     // buffer to hold tokens
-    int buf_size  = 64;
-    char **tokens = (char **)malloc(buf_size * sizeof(char *));
-    
+    int    buf_size = 64;
+    char** tokens   = (char**)malloc(buf_size * sizeof(char*));
+
     if (!tokens) {
-        fprintf(stderr,     
-                RED "Memory allocation failed (tokenize line) : %s\n" reset, strerror(errno));
-        
+        fprintf(
+            stderr, RED "Memory allocation failed (tokenize line) : %s\n" reset, strerror(errno));
+
         exit(EXIT_FAILURE);
     }
 
@@ -107,20 +105,21 @@ char** tok_line(char* line) {
 
     // loop goes until the end of input stream token by token
     while (token) {
-        if (token[0] == '#')  // ignore comments
+        if (token[0] == '#') // ignore comments
             break;
-        
+
         tokens[i++] = token; // insert token at the end of the array
 
         // in case the buffer is not sufficient for more tokens
         if (i >= buf_size) {
             buf_size += buf_size; // double the buffer size
             // realloc memory at the same region
-            char *temp = (char *)realloc(tokens, buf_size * sizeof(char));
+            char* temp = (char*)realloc(tokens, buf_size * sizeof(char));
             if (!temp) {
-                fprintf(stderr, 
-                        RED "Memory reallocation failed (read_stream)! : %s\n" reset, strerror(errno));
-                free(line);  
+                fprintf(
+                    stderr, RED "Memory reallocation failed (read_stream)! : %s\n" reset,
+                    strerror(errno));
+                free(line);
                 exit(EXIT_FAILURE);
             }
 
